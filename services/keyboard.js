@@ -38,7 +38,7 @@ const engToThai = {
 
   // Bottom row (shift)
   "Z": "ฦ", "X": "ฐ", "C": "ฎ", "V": "ฑ", "B": "ั",
-  "N": "ฉ", "M": "ฒ", "<": "ฬ", ">": "ฦ", "?": "ฅ",
+  "N": "์", "M": "ฒ", "<": "ฬ", ">": "ฦ", "?": "ฅ",
 };
 
 // Reverse mapping: Thai → English
