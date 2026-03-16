@@ -51,4 +51,8 @@ client.on("messageCreate", async (msg) => {
   }
 });
 
+// Keep Render Web Service alive
+const http = require("http");
+http.createServer((_, res) => res.end("ok")).listen(process.env.PORT || 3000);
+
 client.login(process.env.BOT_TOKEN);
