@@ -44,13 +44,7 @@ client.on("messageCreate", async (msg) => {
       return;
     }
 
-    const labels = {
-      "eng→thai":  "🇹🇭 พิมพ์ภาษาไทยตอน keyboard เป็นอังกฤษ",
-      "thai→eng":  "🇬🇧 พิมพ์ภาษาอังกฤษตอน keyboard เป็นไทย",
-      "caps-fix":  "🔠 พิมพ์ตอน Caps Lock ติดอยู่",
-    };
-    const label = labels[direction] ?? "🔤 แปลงแล้ว";
-    await msg.reply(`**${label}**\n\`\`\`\n${result}\n\`\`\``);
+    await originalMsg.reply(`\`\`\`\n: ${result}\n\`\`\``);
   } catch (err) {
     console.error("❌ Error:", err);
     await msg.reply("เกิดข้อผิดพลาดบางอย่าง ลองใหม่นะ 😅");

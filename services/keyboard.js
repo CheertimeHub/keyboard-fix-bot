@@ -47,53 +47,52 @@ const thaiToEng = Object.fromEntries(
 );
 
 // ---------------------------------------------------------------------------
-// Caps Lock fix — Kedmanee letter keys only (a-z positions)
-// Caps Lock ทำให้ปุ่มตัวอักษรทุกตัวส่งออก Shift layer แทน Normal layer
-// เช่น กด 'a' ตอน Caps Lock → ได้ ฉ  (shift of a) แทนที่จะได้ ฟ (normal of a)
-// Map นี้คือ: shift_char → normal_char  (ใช้แก้ข้อความที่พิมพ์ตอน Caps Lock ติด)
-//
-// หมายเหตุ: symbol keys (;  '  [  ]  \  ,  .  /) ไม่ได้รับผลจาก Caps Lock
+// Caps Lock fix — Windows Thai Kedmanee keyboard
+// Caps Lock activates a THIRD layer of rare characters (not the Shift layer).
+// This map converts: caps_lock_char → intended_normal_char
 // ---------------------------------------------------------------------------
 
-// Letter key pairs: [normalChar, shiftChar] ตามลำดับ Kedmanee
-const LETTER_KEY_PAIRS = [
-  ["ๆ", "๐"],  // q / Q
-  ["ไ", "ฑ"],  // w / W
-  ["ำ", "ธ"],  // e / E
-  ["พ", "ณ"],  // r / R
-  ["ะ", "ฯ"],  // t / T
-  ["ั", "ญ"],  // y / Y
-  ["ี", "ฐ"],  // u / U  (ฐ also on X but u wins)
-  ["ร", "ฅ"],  // i / I
-  ["น", "ฤ"],  // o / O
-  ["ย", "ฆ"],  // p / P
-  ["ฟ", "ฉ"],  // a / A  (ฉ also on N but a wins)
-  ["ห", "ฮ"],  // s / S
-  ["ก", "ึ"],  // d / D
-  ["ด", "็"],  // f / F
-  // g / G: เ → เ  (same char, skip)
-  ["้", "่"],  // h / H
-  ["่", "๊"],  // j / J
-  ["า", "๋"],  // k / K
-  ["ส", "ซ"],  // l / L
-  ["ผ", "ฦ"],  // z / Z
-  // x / X: ฐ already mapped from u/U
-  ["แ", "ฎ"],  // c / C
-  // v / V: ฑ already mapped from w/W
-  ["ิ", "ั"],  // b / B  (ั also on Y normal, but b-shift wins)
-  // n / N: ฉ already mapped from a/A
-  ["ท", "ฒ"],  // m / M
-];
+const capsToNormal = {
+  // Row 2 (q w e r t y u i o p [ ])
+  "๐": "ๆ",  // q+CL → q
+  '"': "ไ",  // w+CL → w
+  "ฎ": "ำ",  // e+CL → e
+  "ฑ": "พ",  // r+CL → r
+  "ธ": "ะ",  // t+CL → t
+  "ํ": "ั",  // y+CL → y
+  "๊": "ี",  // u+CL → u
+  "ณ": "ร",  // i+CL → i
+  "ฯ": "น",  // o+CL → o
+  "ญ": "ย",  // p+CL → p
+  "ฐ": "บ",  // [+CL → [
+  ",": "ล",  // ]+CL → ]
 
-// Build the fix maps
-const capsToNormal = {}; // shift_char → normal_char  (แก้ Caps Lock ติด)
-const normalToCaps = {}; // normal_char → shift_char  (แก้ Caps Lock ติดตอนกด Shift ด้วย)
+  // Row 3 (a s d f g h j k l ; ' \)
+  "ฤ": "ฟ",  // a+CL → a
+  "ฆ": "ห",  // s+CL → s
+  "ฏ": "ก",  // d+CL → d
+  "โ": "ด",  // f+CL → f
+  "ฌ": "เ",  // g+CL → g
+  "็": "้",  // h+CL → h
+  "๋": "่",  // j+CL → j
+  "ษ": "า",  // k+CL → k
+  "ศ": "ส",  // l+CL → l
+  "ซ": "ว",  // ;+CL → ;
+  ".": "ง",  // '+CL → '
+  "ฅ": "ฃ",  // \+CL → \
 
-for (const [normal, shift] of LETTER_KEY_PAIRS) {
-  if (normal === shift) continue;
-  if (!capsToNormal[shift]) capsToNormal[shift] = normal;
-  if (!normalToCaps[normal]) normalToCaps[normal] = shift;
-}
+  // Row 4 (z x c v b n m , . /)
+  "(": "ผ",  // z+CL → z
+  ")": "ป",  // x+CL → x
+  "ฉ": "แ",  // c+CL → c
+  "ฮ": "อ",  // v+CL → v
+  "ฺ": "ิ",  // b+CL → b
+  "์": "ื",  // n+CL → n
+  "?": "ท",  // m+CL → m
+  "ฒ": "ม",  // ,+CL → ,
+  "ฬ": "ใ",  // .+CL → .
+  "ฦ": "ฝ",  // /+CL → /
+};
 
 // ---------------------------------------------------------------------------
 // Helpers
