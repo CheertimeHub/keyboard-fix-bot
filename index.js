@@ -2,13 +2,13 @@ require("dotenv").config();
 const { Client, GatewayIntentBits } = require("discord.js");
 const { detectAndConvert } = require("./services/keyboard");
 
-// ตรวจสอบ .env variables
-console.log("🔍 Checking environment variables...");
-console.log(`BOT_TOKEN: ${process.env.BOT_TOKEN ? "✅ Found" : "❌ MISSING"}`);
-console.log(`PORT: ${process.env.PORT || "3000 (default)"}`);
+// Debug: Show environment
+console.log("🔍 Environment Check:");
+console.log(`  BOT_TOKEN: ${process.env.BOT_TOKEN ? "✅ Found" : "❌ MISSING"}`);
+console.log(`  PORT: ${process.env.PORT || "3000"}`);
 
 if (!process.env.BOT_TOKEN) {
-  console.error("❌ ERROR: BOT_TOKEN ไม่พบในไฟล์ .env");
+  console.error("❌ FATAL: BOT_TOKEN ไม่พบ!");
   process.exit(1);
 }
 
@@ -20,18 +20,27 @@ const client = new Client({
   ],
 });
 
+// Monitor connection state
+client.on("error", (err) => {
+  console.error("❌ Client Error:", err.message);
+});
+
+client.on("warn", (info) => {
+  console.warn("⚠️  Warning:", info);
+});
+
+// Connection events
+client.on("shardConnect", (id) => {
+  console.log(`🔗 Shard ${id} connected`);
+});
+
+client.on("shardDisconnect", (_, id) => {
+  console.log(`❌ Shard ${id} disconnected`);
+});
+
 client.once("ready", () => {
   console.log(`✅ Bot พร้อมแล้ว! logged in as ${client.user.tag}`);
   console.log(`🎯 Listening for messages...`);
-});
-
-// Error handling
-client.on("error", (error) => {
-  console.error("❌ Discord client error:", error);
-});
-
-client.on("shardError", (error) => {
-  console.error("❌ Shard error:", error);
 });
 
 client.on("messageCreate", async (msg) => {
@@ -101,13 +110,31 @@ http.createServer((req, res) => {
     });
   }
 }).listen(process.env.PORT || 3000, () => {
-  console.log(`🌐 Web server running on port ${process.env.PORT || 3000}`);
+  console.log(`\n🚀 Starting bot login...\n`);
+  console.log(`📍 Web server running on port ${process.env.PORT || 3000}\n`);
 });
 
-// Bot login with error handling
-console.log("🚀 Attempting to login bot...");
-client.login(process.env.BOT_TOKEN).catch((error) => {
-  console.error("❌ Bot login failed:", error.message);
-  console.error("⚠️  ตรวจสอบ BOT_TOKEN ในไฟล์ .env ให้แน่ใจว่าถูกต้อง");
-  process.exit(1);
+// Attempt login with comprehensive error handling
+console.log("⏳ Logging in to Discord...");
+client.login(process.env.BOT_TOKEN)
+  .then(() => {
+    console.log("✅ Login successful!");
+  })
+  .catch((err) => {
+    console.error("❌ Login failed!");
+    console.error("Error:", err.message);
+    console.error("\n💡 Troubleshooting tips:");
+    console.error("  1. Check BOT_TOKEN is correct in Render Environment");
+    console.error("  2. Verify Intent permissions in Discord Developer Portal:");
+    console.error("     - Server Members Intent: ON");
+    console.error("     - Message Content Intent: ON");
+    console.error("  3. Check bot has permissions in the server");
+    process.exit(1);
+  });
+
+// Graceful shutdown
+process.on("SIGINT", () => {
+  console.log("\n⛔ Bot shutting down...");
+  client.destroy();
+  process.exit(0);
 });
