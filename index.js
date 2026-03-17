@@ -2,6 +2,16 @@ require("dotenv").config();
 const { Client, GatewayIntentBits } = require("discord.js");
 const { detectAndConvert } = require("./services/keyboard");
 
+// ตรวจสอบ .env variables
+console.log("🔍 Checking environment variables...");
+console.log(`BOT_TOKEN: ${process.env.BOT_TOKEN ? "✅ Found" : "❌ MISSING"}`);
+console.log(`PORT: ${process.env.PORT || "3000 (default)"}`);
+
+if (!process.env.BOT_TOKEN) {
+  console.error("❌ ERROR: BOT_TOKEN ไม่พบในไฟล์ .env");
+  process.exit(1);
+}
+
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -12,6 +22,16 @@ const client = new Client({
 
 client.once("ready", () => {
   console.log(`✅ Bot พร้อมแล้ว! logged in as ${client.user.tag}`);
+  console.log(`🎯 Listening for messages...`);
+});
+
+// Error handling
+client.on("error", (error) => {
+  console.error("❌ Discord client error:", error);
+});
+
+client.on("shardError", (error) => {
+  console.error("❌ Shard error:", error);
 });
 
 client.on("messageCreate", async (msg) => {
@@ -80,6 +100,14 @@ http.createServer((req, res) => {
       res.end(data);
     });
   }
-}).listen(process.env.PORT || 3000);
+}).listen(process.env.PORT || 3000, () => {
+  console.log(`🌐 Web server running on port ${process.env.PORT || 3000}`);
+});
 
-client.login(process.env.BOT_TOKEN);
+// Bot login with error handling
+console.log("🚀 Attempting to login bot...");
+client.login(process.env.BOT_TOKEN).catch((error) => {
+  console.error("❌ Bot login failed:", error.message);
+  console.error("⚠️  ตรวจสอบ BOT_TOKEN ในไฟล์ .env ให้แน่ใจว่าถูกต้อง");
+  process.exit(1);
+});
