@@ -54,18 +54,18 @@ const thaiToEng = Object.fromEntries(
 
 const capsToNormal = {
     // Row 1 (1 2 3 4 5 6 7 8 9 0 - =)
-  "+": "ๅ",  // q+CL → q
-  '๑': "/",  // w+CL → w
-  "๒": "-",  // e+CL → e
-  "๓": "ภ",  // r+CL → r
-  "๔": "ถ",  // t+CL → t
-  "ํู": "ุ",  // y+CL → y
-  "฿": "ึ",  // u+CL → u
-  "๕": "ค",  // i+CL → i
-  "๖": "ต",  // o+CL → o
-  "๗": "จ",  // p+CL → p
-  "๘": "ข",  // [+CL → [
-  "๙": "ช",  // ]+CL → ]
+  "+": "ๅ",  // 1+CL → 1
+  '๑': "/",  // 2+CL → 2
+  "๒": "-",  // 3+CL → 3
+  "๓": "ภ",  // 4+CL → 4
+  "๔": "ถ",  // 5+CL → 5
+  "ู": "ุ",   // 6+CL → 6 (Shift+6 with CapsLock → fix to sara u)
+  "฿": "ึ",  // 7+CL → 7
+  "๕": "ค",  // 8+CL → 8
+  "๖": "ต",  // 9+CL → 9
+  "๗": "จ",  // 0+CL → 0
+  "๘": "ข",  // -+CL → -
+  "๙": "ช",  // =+CL → =
 
   // Row 2 (q w e r t y u i o p [ ])
   "๐": "ๆ",  // q+CL → q
@@ -87,7 +87,8 @@ const capsToNormal = {
   "ฏ": "ก",  // d+CL → d
   "โ": "ด",  // f+CL → f
   "ฌ": "เ",  // g+CL → g
-  "็": "้",  // h+CL → h
+  "็": "้",  // h+CL → h (caps layer ็ → intended ้)
+  "้": "็",  // Shift+h with CapsLock → ้ (normal layer), intended ็
   "๋": "่",  // j+CL → j
   "ษ": "า",  // k+CL → k
   "ศ": "ส",  // l+CL → l
@@ -101,7 +102,8 @@ const capsToNormal = {
   "ฉ": "แ",  // c+CL → c
   "ฮ": "อ",  // v+CL → v
   "ฺ": "ิ",  // b+CL → b
-  "์": "ื",  // n+CL → n
+  "์": "ื",  // n+CL → n (caps layer ์ → intended ื)
+  "ื": "์",  // Shift+n with CapsLock → ื (normal layer), intended ์
   "?": "ท",  // m+CL → m
   "ฒ": "ม",  // ,+CL → ,
   "ฬ": "ใ",  // .+CL → .
@@ -123,14 +125,106 @@ function isMostlyThai(text) {
 // Public API
 // ---------------------------------------------------------------------------
 
+// Single-char caps-lock indicator set (excludes multi-char keys like "ํู")
+const capsKeys = new Set(Object.keys(capsToNormal).filter((k) => k.length === 1));
+
+// ---------------------------------------------------------------------------
+// Thai dictionary for disambiguating ambiguous chars (็/้, ์/ื)
+// ---------------------------------------------------------------------------
+const { maiTaiku, karan, maiTho, maiIi } = require("./thaiWords.json");
+const maiTaikuSet = new Set(maiTaiku); // words containing ็
+const karanSet    = new Set(karan);    // words containing ์
+const maiThoSet   = new Set(maiTho);   // words containing ้  (guard)
+const maiIiSet    = new Set(maiIi);    // words containing ี  (guard)
+
+/**
+ * หลังจาก caps-fix แล้ว ยังมีกรณีที่ ้ หรือ ื อาจเป็น ็ หรือ ์ แทน
+ * Logic: replace ้→็ เฉพาะเมื่อ:
+ *   1. substring รอบๆ ด้วย ็ ตรงกับ maiTaikuSet
+ *   2. AND substring รอบๆ ด้วย ้ ไม่ตรงกับ maiThoSet (เพื่อป้องกัน false positive)
+ * เช่น แป้น → ้ อยู่ใน maiThoSet → ไม่แทน   ล้อค → ้ ไม่อยู่ใน maiThoSet + ็ อยู่ → แทน
+ */
+function resolveByDict(text) {
+  const chars = [...text];
+  const result = [...chars];
+
+  for (let i = 0; i < chars.length; i++) {
+    // [replacement, targetSet, guardSet, minGuardLen]
+    const swaps = chars[i] === "้" ? ["็", maiTaikuSet, maiThoSet, 4]
+                : chars[i] === "ื" ? ["์", karanSet,    null,      0]
+                : chars[i] === "ี" ? ["์", karanSet,    maiIiSet,  3]
+                : null;
+    if (!swaps) continue;
+
+    const [replacement, targetSet, guardSet, minGuardLen] = swaps;
+
+    const start = Math.max(0, i - 6);
+    const end   = Math.min(chars.length, i + 7);
+    const temp  = [...result];
+    temp[i] = replacement;
+
+    // หา Thai-char run ที่คลุม i ใน temp (version ็/์)
+    let lo = i, hi = i;
+    while (lo > start && temp[lo - 1] >= "\u0E00" && temp[lo - 1] <= "\u0E7F") lo--;
+    while (hi < end - 1 && temp[hi + 1] >= "\u0E00" && temp[hi + 1] <= "\u0E7F") hi++;
+
+    // ตรวจ guard: ถ้ามี substring ด้วย ้ อยู่ใน guardSet → ไม่แทน
+    if (guardSet) {
+      let guarded = false;
+      for (let s = lo; s <= i && !guarded; s++) {
+        for (let e = i + 1; e <= hi + 1 && !guarded; e++) {
+          const sub = result.slice(s, e).join(""); // version ้/ี (original)
+          if (sub.length >= minGuardLen && guardSet.has(sub)) guarded = true;
+        }
+      }
+      if (guarded) continue;
+    }
+
+    // ตรวจ target: ถ้ามี substring ด้วย ็/์ อยู่ใน targetSet → แทน
+    let found = false;
+    for (let s = lo; s <= i && !found; s++) {
+      for (let e = i + 1; e <= hi + 1 && !found; e++) {
+        const sub = temp.slice(s, e).join("");
+        if (targetSet.has(sub)) found = true;
+      }
+    }
+
+    if (found) result[i] = replacement;
+  }
+
+  return result.join("");
+}
+
 /**
  * แก้ข้อความที่พิมพ์ตอน Caps Lock ติดอยู่ (ภาษาไทย)
+ * ตรวจสอบเป็นคำๆ — แปลงเฉพาะคำที่มี caps-lock chars เกินครึ่ง
  * @param {string} text
  * @returns {{ result: string, direction: string }}
  */
 function fixCapsLock(text) {
-  const result = [...text].map((c) => capsToNormal[c] ?? c).join("");
-  return { result, direction: "caps-fix" };
+  // split preserving spaces so we can rejoin exactly
+  const result = text.split(/( +)/).map((token) => {
+    if (!token.trim()) return token;
+
+    const chars = [...token];
+    let capsCount = 0;
+    let normalThaiCount = 0;
+
+    for (const c of chars) {
+      if (capsKeys.has(c)) capsCount++;
+      else if (c >= "\u0E00" && c <= "\u0E7F") normalThaiCount++;
+    }
+
+    const total = capsCount + normalThaiCount;
+    if (total > 0 && capsCount / total >= 0.5) {
+      return chars.map((c) => capsToNormal[c] ?? c).join("");
+    }
+    return token;
+  }).join("");
+
+  const resolved = resolveByDict(result);
+  if (resolved === text) return { result: text, direction: "none" };
+  return { result: resolved, direction: "caps-fix" };
 }
 
 /**

@@ -37,8 +37,14 @@ npm start
 - `detectAndConvert(text)`: ฟังก์ชันหลัก — auto-detect แล้ว convert, return `{ result, direction }`
 - `fixCapsLock(text)`: แก้ข้อความไทยที่พิมพ์ตอน Caps Lock เปิดอยู่
 
+### Web Server (ใน `index.js`)
+- HTTP server รันบน `process.env.PORT || 3000`
+- `GET /` และ `GET /about` → serve `public/index.html` และ `public/about.html`
+- `POST /api/convert` → รับ `{ text }` ใน JSON body, ส่งคืน `{ result, direction }`
+
 ## Environment Variables
 
 | Variable    | Description              |
 |-------------|--------------------------|
 | `BOT_TOKEN` | Discord bot token        |
+| `PORT`      | HTTP server port (default: 3000) |
