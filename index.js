@@ -43,6 +43,13 @@ client.once("ready", () => {
   console.log(`🎯 Listening for messages...`);
 });
 
+client.on("shardError", console.error)
+client.on("error", console.error)
+
+client.login(process.env.BOT_TOKEN)
+ .then(()=> console.log("LOGIN SUCCESS"))
+ .catch(console.error)
+
 client.on("messageCreate", async (msg) => {
   // ไม่ตอบสนองต่อ bot อื่น
   if (msg.author.bot) return;
@@ -79,6 +86,9 @@ client.on("messageCreate", async (msg) => {
     await msg.reply("เกิดข้อผิดพลาดบางอย่าง ลองใหม่นะ 😅");
   }
 });
+
+console.log("Node version:", process.version)
+console.log("Discord.js version:", require("discord.js").version)
 
 // Web server
 const http = require("http");
