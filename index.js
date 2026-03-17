@@ -23,7 +23,7 @@ client.on("messageCreate", async (msg) => {
 
   // ต้องเป็น reply ก่อน
   if (!msg.reference) {
-    await msg.reply("ต้อง **reply** ข้อความที่อยากแปลก่อน แล้วค่อย @ฉันนะ 👀");
+    await msg.reply("ต้อง **reply** ข้อความที่อยากแปลก่อน แล้วค่อย @ฉันนะ 👀\nหรือใช้เว็บได้เลยที่ https://keyboard-fix-bot.onrender.com");
     return;
   }
 
@@ -51,8 +51,35 @@ client.on("messageCreate", async (msg) => {
   }
 });
 
-// Keep Render Web Service alive
+// Web server
 const http = require("http");
-http.createServer((_, res) => res.end("ok")).listen(process.env.PORT || 3000);
+const fs = require("fs");
+const path = require("path");
+
+http.createServer((req, res) => {
+  if (req.method === "POST" && req.url === "/api/convert") {
+    let body = "";
+    req.on("data", (chunk) => (body += chunk));
+    req.on("end", () => {
+      try {
+        const { text } = JSON.parse(body);
+        const { result, direction } = detectAndConvert(text || "");
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ result, direction }));
+      } catch {
+        res.writeHead(400);
+        res.end();
+      }
+    });
+  } else {
+    const page = req.url === "/about" ? "about.html" : "index.html";
+    const file = path.join(__dirname, "public", page);
+    fs.readFile(file, (err, data) => {
+      if (err) { res.writeHead(404); res.end(); return; }
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+      res.end(data);
+    });
+  }
+}).listen(process.env.PORT || 3000);
 
 client.login(process.env.BOT_TOKEN);
