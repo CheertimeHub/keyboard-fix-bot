@@ -1,9 +1,18 @@
-🤖 KeyBot — Discord bot สำหรับแก้ข้อความที่พิมพ์ผิด keyboard layout ภาษาไทย (Kedmanee) 
-รองรับ 3 เคส: 
-            - พิมพ์ไทยตอน keyboard เป็นอังกฤษ, 
-            - พิมพ์อังกฤษตอน keyboard เป็นไทย, 
-            - พิมพ์ตอน Caps Lock ติด
-___________________________________________________________________________________
+# Keyboard Fix Discord Bot
 
-วิธีใช้คือ reply ข้อความที่พิมพ์ผิดแล้ว @KeyBot ได้เลย 
-| Built with discord.js · Hosted on Render
+A Discord bot that automatically converts mistyped Thai/English keyboard layouts.
+
+Example:
+
+l;ylfu8iy[ → สวัสดีครับ
+
+## Features
+
+- Thai ↔ English keyboard layout conversion
+- Reply based command
+- Auto detection
+
+## Tech Stack
+
+- Node.js
+- Discord.js
