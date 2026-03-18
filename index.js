@@ -127,15 +127,8 @@ client.login(process.env.BOT_TOKEN)
     console.log("✅ Login successful!");
   })
   .catch((err) => {
-    console.error("❌ Login failed!");
-    console.error("Error:", err.message);
-    console.error("\n💡 Troubleshooting tips:");
-    console.error("  1. Check BOT_TOKEN is correct in Render Environment");
-    console.error("  2. Verify Intent permissions in Discord Developer Portal:");
-    console.error("     - Server Members Intent: ON");
-    console.error("     - Message Content Intent: ON");
-    console.error("  3. Check bot has permissions in the server");
-    process.exit(1);
+    console.error("❌ Login failed! Error:", err.message);
+    setTimeout(() => process.exit(1), 1000);
   });
 
 // Graceful shutdown
