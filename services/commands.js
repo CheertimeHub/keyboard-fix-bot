@@ -26,24 +26,24 @@ function parseDiceNotation(raw) {
     str = str.slice(0, -cMatch[0].length);
   }
 
-  // Keep/Drop suffix: kh/kl/dh/dl/k/d + N
-  let keepMode = null, keepN = null;
-  const kMatch = str.match(/([kd][hl]?)(\d+)$/i);
-  if (kMatch) {
-    keepMode = kMatch[1].toLowerCase();
-    keepN = parseInt(kMatch[2]);
-    str = str.slice(0, -kMatch[0].length);
-    if (keepMode === "k") keepMode = "kh"; // k = keep highest
-    if (keepMode === "d") keepMode = "dl"; // d = drop lowest
-  }
-
-  // Core: [M]dS[+/-mod...]
-  const dMatch = str.match(/^(\d+)?d(\d+)((?:[+\-]\d+)*)$/);
+  // Core: [M]dS[+/-mod][kh/kl/dh/dl/k/d N] — keep/drop parsed inside core to avoid ambiguity with dN
+  const dMatch = str.match(/^(\d+)?d(\d+)((?:[+\-]\d+)*)([kd][hl]?\d+)?$/);
   if (!dMatch) return null;
 
   const count = parseInt(dMatch[1]) || 1;
   const sides = parseInt(dMatch[2]);
   const modifier = (dMatch[3].match(/[+\-]\d+/g) || []).reduce((s, m) => s + parseInt(m), 0);
+
+  let keepMode = null, keepN = null;
+  if (dMatch[4]) {
+    const kMatch = dMatch[4].match(/([kd][hl]?)(\d+)/i);
+    if (kMatch) {
+      keepMode = kMatch[1].toLowerCase();
+      keepN = parseInt(kMatch[2]);
+      if (keepMode === "k") keepMode = "kh";
+      if (keepMode === "d") keepMode = "dl";
+    }
+  }
 
   if (sides < 2 || sides > 100000 || count < 1 || count > 100) return null;
   if (repeat < 1 || repeat > 20) return null;
