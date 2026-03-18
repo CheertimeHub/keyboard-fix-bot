@@ -117,7 +117,7 @@ http.createServer((req, res) => {
       }
     });
   } else {
-    const page = req.url === "/about" ? "about.html" : "index.html";
+    const page = req.url === "/about" ? "about.html" : req.url === "/how-to-use" ? "how-to-use.html" : "index.html";
     const file = path.join(__dirname, "public", page);
     fs.readFile(file, (err, data) => {
       if (err) { res.writeHead(404); res.end(); return; }
