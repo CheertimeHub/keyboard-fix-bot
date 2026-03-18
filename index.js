@@ -1,6 +1,7 @@
 require("dotenv").config();
 const { Client, GatewayIntentBits } = require("discord.js");
 const { detectAndConvert } = require("./services/keyboard");
+const { parseAndExecute } = require("./services/commands");
 
 // Debug: Show environment
 console.log("🔍 Environment Check:");
@@ -53,9 +54,18 @@ client.on("messageCreate", async (msg) => {
   // ต้องแท็กบอทเท่านั้น
   if (!msg.mentions.has(client.user)) return;
 
-  // ต้องเป็น reply ก่อน
+  // ถ้าไม่ได้ reply → ลองตีความเป็น command
   if (!msg.reference) {
-    await msg.reply("ต้อง **reply** ข้อความที่อยากแปลก่อน แล้วค่อย @ฉันนะ 👀\nหรือใช้เว็บได้เลยที่ https://keyboard-fix-bot.onrender.com");
+    const commandResult = parseAndExecute(msg.content);
+    if (commandResult) {
+      const loadingMap = { "🎲": "🎲 กำลังทอย...", "🪙": "🪙 กำลังทอย...", "🔢": "🔢 กำลังสุ่ม...", "✨": "✨ กำลังเลือก..." };
+      const loading = loadingMap[commandResult[0]] ?? "⏳ กำลังคำนวณ...";
+      const sent = await msg.reply(loading);
+      await new Promise((r) => setTimeout(r, 1000));
+      await sent.edit(commandResult);
+    } else {
+      await msg.reply("ต้อง **reply** ข้อความที่อยากแปลก่อน แล้วค่อย @ฉันนะ 👀\nหรือใช้เว็บได้เลยที่ https://xevradotgpt.onrender.com");
+    }
     return;
   }
 
