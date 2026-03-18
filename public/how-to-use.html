@@ -227,39 +227,82 @@
     <!-- Dice -->
     <div class="tab-panel" id="tab-dice">
       <p class="panel-title">🎲 ทอยเต๋า</p>
-      <p class="panel-desc">ทอยเต๋าแบบกำหนดเองได้ รองรับ dice notation มาตรฐาน (NdM) และภาษาพูดธรรมชาติ</p>
+      <p class="panel-desc">รองรับ dice notation มาตรฐาน สามารถใส่ modifier, keep/drop, และ threshold ได้</p>
 
       <div class="examples">
-        <div class="example-label">ตัวอย่าง</div>
-
+        <div class="example-label">พื้นฐาน</div>
         <div class="example">
           <div class="msg msg-user"><span class="msg-label label-user">User</span> @Xevra.GPT ทอยเต๋า</div>
           <hr class="divider">
-          <div class="msg msg-bot"><span class="msg-label label-bot">Xevra</span> 🎲 ทอย d6: <strong>4</strong></div>
+          <div class="msg msg-bot"><span class="msg-label label-bot">Xevra</span> 🎲 [4] = <strong>4</strong> (d6)</div>
         </div>
-
         <div class="example">
           <div class="msg msg-user"><span class="msg-label label-user">User</span> @Xevra.GPT ทอย 2d6</div>
           <hr class="divider">
-          <div class="msg msg-bot"><span class="msg-label label-bot">Xevra</span> 🎲 ทอย 2d6: <strong>9</strong></div>
+          <div class="msg msg-bot"><span class="msg-label label-bot">Xevra</span> 🎲 [5, 4] = <strong>9</strong> (2d6)</div>
         </div>
 
+        <div class="example-label" style="margin-top:0.5rem">Modifier (+/-)</div>
         <div class="example">
-          <div class="msg msg-user"><span class="msg-label label-user">User</span> @Xevra.GPT ทอย 3#d6</div>
+          <div class="msg msg-user"><span class="msg-label label-user">User</span> @Xevra.GPT 5#d20+5</div>
           <hr class="divider">
-          <div class="msg msg-bot"><span class="msg-label label-bot">Xevra</span> 🎲 ทอย 3d6: [2, 5, 4] = <strong>11</strong></div>
+          <div class="msg msg-bot"><span class="msg-label label-bot">Xevra</span>
+            🎲 5#d20+5<br>
+            ▸ [12] + 5 = <strong>17</strong><br>
+            ▸ [7] + 5 = <strong>12</strong><br>
+            ▸ [3] + 5 = <strong>8</strong><br>
+            ▸ [16] + 5 = <strong>21</strong><br>
+            ▸ [19] + 5 = <strong>24</strong>
+          </div>
         </div>
 
+        <div class="example-label" style="margin-top:0.5rem">Keep Highest / Keep Lowest</div>
+        <div class="example">
+          <div class="msg msg-user"><span class="msg-label label-user">User</span> @Xevra.GPT 4d6kh3 <span style="color:#aaa">(stat generation)</span></div>
+          <hr class="divider">
+          <div class="msg msg-bot"><span class="msg-label label-bot">Xevra</span> 🎲 [6, 5, 4, <s>1</s>] = <strong>15</strong> (4d6kh3)</div>
+        </div>
+        <div class="example">
+          <div class="msg msg-user"><span class="msg-label label-user">User</span> @Xevra.GPT 10d6kl2</div>
+          <hr class="divider">
+          <div class="msg msg-bot"><span class="msg-label label-bot">Xevra</span> 🎲 [<s>6</s>, <s>5</s>, <s>5</s>, <s>4</s>, <s>4</s>, <s>3</s>, <s>2</s>, <s>2</s>, 1, 1] = <strong>2</strong> (10d6kl2)</div>
+        </div>
+
+        <div class="example-label" style="margin-top:0.5rem">Drop Lowest / Drop Highest</div>
+        <div class="example">
+          <div class="msg msg-user"><span class="msg-label label-user">User</span> @Xevra.GPT 4d6dl1 <span style="color:#aaa">(= 4d6kh3)</span></div>
+          <hr class="divider">
+          <div class="msg msg-bot"><span class="msg-label label-bot">Xevra</span> 🎲 [6, 5, 4, <s>1</s>] = <strong>15</strong> (4d6dl1)</div>
+        </div>
+
+        <div class="example-label" style="margin-top:0.5rem">Success / Fail Threshold</div>
+        <div class="example">
+          <div class="msg msg-user"><span class="msg-label label-user">User</span> @Xevra.GPT 5#d20&lt;5</div>
+          <hr class="divider">
+          <div class="msg msg-bot"><span class="msg-label label-bot">Xevra</span>
+            🎲 5#d20&lt;5<br>
+            ▸ <strong>17</strong> [17] &lt; 5 → ✗<br>
+            ▸ <strong>4</strong> [4] &lt; 5 → ✓<br>
+            ▸ <strong>20</strong> [20] &lt; 5 → ✗<br>
+            ▸ <strong>7</strong> [7] &lt; 5 → ✗<br>
+            ▸ <strong>18</strong> [18] &lt; 5 → ✗<br>
+            Successes: <strong>1/5</strong>
+          </div>
+        </div>
+
+        <div class="example-label" style="margin-top:0.5rem">ภาษาพูด</div>
         <div class="example">
           <div class="msg msg-user"><span class="msg-label label-user">User</span> @Xevra.GPT ทอย 3 ลูก 6 หน้า</div>
           <hr class="divider">
-          <div class="msg msg-bot"><span class="msg-label label-bot">Xevra</span> 🎲 ทอย 3d6: [1, 6, 3] = <strong>10</strong></div>
+          <div class="msg msg-bot"><span class="msg-label label-bot">Xevra</span> 🎲 [4, 2, 6] = <strong>12</strong> (3d6)</div>
         </div>
       </div>
 
       <div class="note">
-        <strong>NdM</strong> = ทอย N ลูก M หน้า ได้ผลรวม<br>
-        <strong>N#dM</strong> = ทอย N ลูก M หน้า ได้ผลแยกรายลูก
+        <strong>Syntax:</strong> <code>[N#][M]dS[+/-mod][kh/kl/dh/dl N][&lt;/&gt;/&lt;=/&gt;= N]</code><br><br>
+        <strong>N#</strong> = ทอยซ้ำ N ครั้ง &nbsp;|&nbsp; <strong>MdS</strong> = M ลูก S หน้า<br>
+        <strong>kh/kl</strong> = keep highest/lowest &nbsp;|&nbsp; <strong>dh/dl</strong> = drop highest/lowest<br>
+        <strong>&lt;5 &gt;10 &gt;=15</strong> = threshold สำเร็จ/ล้มเหลว
       </div>
     </div>
 
