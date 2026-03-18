@@ -122,7 +122,13 @@ http.createServer((req, res) => {
 
 // Attempt login with comprehensive error handling
 console.log("⏳ Logging in to Discord...");
-client.login(process.env.BOT_TOKEN)
+const https = require("https");
+https.get("https://discord.com/api/v10/gateway", (res) => {
+  console.log("🌐 Discord API reachable, status:", res.statusCode);
+}).on("error", (e) => {
+  console.error("🌐 Discord API unreachable:", e.message);
+});
+client.login(process.env.BOT_TOKEN.trim())
   .then(() => {
     console.log("✅ Login successful!");
   })
