@@ -12,13 +12,8 @@ Discord bot แปลงข้อความที่พิมพ์ผิด k
 ## Running the Bot
 
 ```bash
-# ติดตั้ง dependencies
 npm install
-
-# สร้างไฟล์ .env จาก .env.example และใส่ token
-cp .env.example .env
-
-# รัน bot
+cp .env.example .env   # ใส่ BOT_TOKEN ใน .env
 npm start
 ```
 
@@ -26,21 +21,31 @@ npm start
 
 ### Entry Point: `index.js`
 - สร้าง Discord client ด้วย intents: `Guilds`, `GuildMessages`, `MessageContent`
-- Bot จะ respond เมื่อมีคน @mention bot ในขณะที่ reply ข้อความอื่น
-- เรียก `detectAndConvert()` จาก `services/keyboard.js` แล้วส่งผลกลับ
+- Bot respond เมื่อถูก @mention **ในขณะที่ reply** ข้อความอื่น — ถ้าไม่ reply จะแจ้งให้ใช้งานถูกต้อง
+- เรียก `detectAndConvert()` จาก `services/keyboard.js` แล้ว reply ผลกลับด้วย code block
+- รัน HTTP server คู่กันบน `process.env.PORT || 3000` สำหรับ web UI
 
 ### Core Logic: `services/keyboard.js`
-- `engToThai` map: ตัวอักษร ASCII → อักษรไทย (Kedmanee layout)
-- `thaiToEng` map: สร้างจาก `engToThai` แบบ reverse
-- `LETTER_KEY_PAIRS` + `capsToNormal`/`normalToCaps` maps: สำหรับแก้ปัญหา Caps Lock
-- `isMostlyThai(text)`: ตรวจว่าข้อความส่วนใหญ่เป็นภาษาไทย (Unicode U+0E00-U+0E7F)
-- `detectAndConvert(text)`: ฟังก์ชันหลัก — auto-detect แล้ว convert, return `{ result, direction }`
-- `fixCapsLock(text)`: แก้ข้อความไทยที่พิมพ์ตอน Caps Lock เปิดอยู่
+
+**Maps:**
+- `engToThai`: ASCII → Thai (Kedmanee layout), ครอบคลุมทั้ง unshifted, shifted, และ symbol keys
+- `thaiToEng`: สร้างจาก `engToThai` แบบ reverse อัตโนมัติ
+- `capsToNormal`: Thai caps-lock char → Thai normal char (Windows Kedmanee layer 3)
+
+**ฟังก์ชันหลัก:**
+- `isMostlyThai(text)`: ถ้า >50% ของ non-whitespace chars อยู่ใน U+0E00-U+0E7F → Thai
+- `detectAndConvert(text)`: entry point — ถ้า Thai → `fixCapsLock()`, ถ้า ASCII → นับ engToThai vs thaiToEng hits แล้วเลือก direction
+- `fixCapsLock(text)`: แก้ caps-lock token-by-token (split by spaces) — แปลงเฉพาะ token ที่มี caps chars เกิน 50%
+- `resolveByDict(text)`: ใช้ Thai dictionary (`thaiWords.json`) แก้ความคลุมเครือของ ็/้ และ ์/ื/ี หลัง caps-fix
+
+**Dictionary disambiguation (`services/thaiWords.json`):**
+- มี 4 sets: `maiTaiku` (คำที่มี ็), `karan` (คำที่มี ์), `maiTho` (คำที่มี ้), `maiIi` (คำที่มี ี)
+- ใช้ sliding window (±6 chars) หา Thai substring ที่ match dictionary ก่อนตัดสินว่าจะแทนหรือไม่
 
 ### Web Server (ใน `index.js`)
-- HTTP server รันบน `process.env.PORT || 3000`
-- `GET /` และ `GET /about` → serve `public/index.html` และ `public/about.html`
-- `POST /api/convert` → รับ `{ text }` ใน JSON body, ส่งคืน `{ result, direction }`
+- `GET /` → serve `public/index.html`
+- `GET /about` → serve `public/about.html`
+- `POST /api/convert` → รับ `{ text }`, ส่งคืน `{ result, direction }`
 
 ## Environment Variables
 
@@ -48,3 +53,7 @@ npm start
 |-------------|--------------------------|
 | `BOT_TOKEN` | Discord bot token        |
 | `PORT`      | HTTP server port (default: 3000) |
+
+## Deployment
+
+Bot deploy อยู่บน [Render](https://keyboard-fix-bot.onrender.com) — web UI เข้าได้ที่ URL นั้น

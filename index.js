@@ -46,10 +46,6 @@ client.once("ready", () => {
 client.on("shardError", console.error)
 client.on("error", console.error)
 
-client.login(process.env.BOT_TOKEN)
- .then(()=> console.log("LOGIN SUCCESS"))
- .catch(console.error)
-
 client.on("messageCreate", async (msg) => {
   // ไม่ตอบสนองต่อ bot อื่น
   if (msg.author.bot) return;
