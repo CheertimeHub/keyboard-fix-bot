@@ -21,8 +21,9 @@ npm start
 
 ### Entry Point: `index.js`
 - สร้าง Discord client ด้วย intents: `Guilds`, `GuildMessages`, `MessageContent`
-- Bot respond เมื่อถูก @mention **ในขณะที่ reply** ข้อความอื่น — ถ้าไม่ reply จะแจ้งให้ใช้งานถูกต้อง
-- เรียก `detectAndConvert()` จาก `services/keyboard.js` แล้ว reply ผลกลับด้วย code block
+- Bot respond เมื่อถูก @mention:
+  - **มี reply**: ดึงข้อความต้นฉบับ → เรียก `detectAndConvert()` → ส่งผลกลับเป็น code block
+  - **ไม่มี reply**: เรียก `parseAndExecute()` ก่อน — ถ้าเป็น command (ทอยเต๋า/สุ่ม/เลือก) จะตอบกลับ ถ้าไม่ใช่ จะแนะนำให้ reply
 - รัน HTTP server คู่กันบน `process.env.PORT || 3000` สำหรับ web UI
 
 ### Core Logic: `services/keyboard.js`
@@ -42,9 +43,23 @@ npm start
 - มี 4 sets: `maiTaiku` (คำที่มี ็), `karan` (คำที่มี ์), `maiTho` (คำที่มี ้), `maiIi` (คำที่มี ี)
 - ใช้ sliding window (±6 chars) หา Thai substring ที่ match dictionary ก่อนตัดสินว่าจะแทนหรือไม่
 
+### Commands: `services/commands.js`
+
+Bot รองรับ commands ที่ใช้ @mention โดยตรง (ไม่ต้อง reply):
+
+- **ทอยเต๋า**: รองรับ RPG dice notation `[N#][M]dS[+/-mod][kh/kl/dh/dl N][op N]`
+  - ตัวอย่าง: `ทอย 2d6+3`, `ทอย 4d6kh3`, `ทอย 3#d20>=15`
+  - fallback Thai keywords: "ทอยเต๋า 6 หน้า", "ทอย 3 ลูก"
+- **เหรียญ**: "ทอยเหรียญ" → หัว/ก้อย
+- **สุ่มเลข**: "สุ่ม 1-100", "สุ่ม 50"
+- **เลือก**: "เลือก A หรือ B หรือ C"
+
+`parseAndExecute(rawText)` strips mentions แล้วลอง `executeCoin → executeDice → executeRandom → executeChoose` ตามลำดับ
+
 ### Web Server (ใน `index.js`)
-- `GET /` → serve `public/index.html`
-- `GET /about` → serve `public/about.html`
+- `GET /` → `public/index.html`
+- `GET /about` → `public/about.html`
+- `GET /how-to-use` → `public/how-to-use.html`
 - `POST /api/convert` → รับ `{ text }`, ส่งคืน `{ result, direction }`
 
 ## Environment Variables

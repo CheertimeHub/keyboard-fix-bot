@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Xevra.GPT</title>
+  <script>if((localStorage.getItem("theme")??"dark")==="dark")document.documentElement.classList.add("dark");</script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -17,6 +18,7 @@
       align-items: center;
       justify-content: center;
       padding: 5rem 2rem 2rem;
+      transition: color 0.25s;
     }
 
     nav {
@@ -28,47 +30,48 @@
       justify-content: space-between;
       background: #f9f9f9;
       border-bottom: 1px solid #e5e5e5;
+      transition: background 0.25s, border-color 0.25s;
     }
 
-    h1 {
-      font-size: 1.1rem;
-      font-weight: 800;
-      color: #111;
-    }
+    h1 { font-size: 1.1rem; font-weight: 800; }
 
-    .invite {
-      position: relative;
-      display: flex;
-      align-items: center;
-    }
+    .nav-right { display: flex; align-items: center; gap: 0.5rem; }
 
-    .invite a {
+    .nav-link {
+      font-size: 0.9rem;
+      color: #555;
+      text-decoration: none;
+      padding: 0.3rem 0.6rem;
+      border-radius: 6px;
+      transition: background 0.15s, color 0.15s;
+    }
+    .nav-link:hover { background: #e5e5e5; color: #111; }
+    .nav-link.active { font-weight: 600; color: #111; background: #e5e5e5; }
+
+    .icon-btn {
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 32px;
-      height: 32px;
+      width: 32px; height: 32px;
       border-radius: 8px;
+      background: none;
+      border: none;
+      cursor: pointer;
       color: #111;
       text-decoration: none;
       transition: background 0.15s;
     }
+    .icon-btn:hover { background: #e5e5e5; }
 
-    .invite a:hover { background: #e5e5e5; }
-
+    .invite { position: relative; display: flex; align-items: center; }
     .invite .tooltip {
       display: none;
       position: absolute;
-      top: calc(100% + 8px);
-      right: 0;
-      background: #111;
-      color: #fff;
-      font-size: 0.78rem;
-      white-space: nowrap;
-      padding: 0.35rem 0.6rem;
-      border-radius: 6px;
+      top: calc(100% + 8px); right: 0;
+      background: #111; color: #fff;
+      font-size: 0.78rem; white-space: nowrap;
+      padding: 0.35rem 0.6rem; border-radius: 6px;
     }
-
     .invite:hover .tooltip { display: block; }
 
     .card {
@@ -76,77 +79,104 @@
       border: 1px solid #e5e5e5;
       border-radius: 12px;
       padding: 1.5rem;
-      width: 100%;
-      max-width: 480px;
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
+      width: 100%; max-width: 480px;
+      display: flex; flex-direction: column; gap: 1rem;
+      transition: background 0.25s, border-color 0.25s;
     }
 
     textarea {
-      width: 100%;
-      height: 100px;
+      width: 100%; height: 100px;
       border: 1px solid #e5e5e5;
       border-radius: 8px;
       padding: 0.75rem;
-      font-size: 1rem;
-      font-family: inherit;
-      resize: none;
-      outline: none;
-      transition: border-color 0.2s;
-      background: #fafafa;
+      font-size: 1rem; font-family: inherit;
+      resize: none; outline: none;
+      transition: border-color 0.2s, background 0.25s, color 0.25s;
+      background: #fafafa; color: #111;
     }
-
     textarea:focus { border-color: #111; background: #fff; }
 
     button {
-      background: #111;
-      color: #fff;
-      border: none;
-      border-radius: 8px;
+      background: #111; color: #fff;
+      border: none; border-radius: 8px;
       padding: 0.75rem;
-      font-size: 0.95rem;
-      font-family: inherit;
-      cursor: pointer;
-      transition: opacity 0.2s;
+      font-size: 0.95rem; font-family: inherit;
+      cursor: pointer; transition: opacity 0.2s;
     }
-
     button:hover { opacity: 0.75; }
 
     .output {
       min-height: 48px;
-      background: #fafafa;
-      border: 1px solid #e5e5e5;
-      border-radius: 8px;
-      padding: 0.75rem;
-      font-size: 1rem;
-      color: #111;
-      word-break: break-all;
+      background: #fafafa; border: 1px solid #e5e5e5;
+      border-radius: 8px; padding: 0.75rem;
+      font-size: 1rem; color: #111; word-break: break-all;
+      transition: background 0.25s, border-color 0.25s, color 0.25s;
     }
-
     .output.empty { color: #aaa; }
+
+    /* ── Dark mode ── */
+    html.dark body {
+      background: linear-gradient(180deg, #0d1117 0%, #0f2440 60%, #2596be 100%);
+      background-attachment: fixed;
+      color: #e2e8f0;
+    }
+    html.dark nav {
+      background: rgba(13, 17, 23, 0.88);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-color: #1e3a5f;
+    }
+    html.dark h1 { color: #e2e8f0; }
+    html.dark .nav-link { color: #94a3b8; }
+    html.dark .nav-link:hover { background: rgba(255,255,255,0.07); color: #e2e8f0; }
+    html.dark .nav-link.active { background: rgba(37,150,190,0.18); color: #7dd3f0; font-weight: 600; }
+    html.dark .icon-btn { color: #94a3b8; }
+    html.dark .icon-btn:hover { background: rgba(255,255,255,0.07); color: #e2e8f0; }
+    html.dark .invite .tooltip { background: #e2e8f0; color: #0d1117; }
+    html.dark .card {
+      background: rgba(13, 26, 46, 0.72);
+      border-color: #1e3a5f;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+    html.dark textarea {
+      background: rgba(7, 16, 32, 0.8);
+      border-color: #1e3a5f;
+      color: #e2e8f0;
+    }
+    html.dark textarea::placeholder { color: #4a6080; }
+    html.dark textarea:focus { border-color: #2596be; background: rgba(7, 16, 32, 0.95); }
+    html.dark .card > button { background: #2596be; }
+    html.dark .output {
+      background: rgba(7, 16, 32, 0.8);
+      border-color: #1e3a5f; color: #e2e8f0;
+    }
+    html.dark .output.empty { color: #4a6080; }
   </style>
 </head>
 <body>
   <nav>
     <h1>Xevra.GPT</h1>
-    <div style="display:flex;align-items:center;gap:0.5rem">
-      <a href="/" style="font-size:0.9rem;color:#111;font-weight:600;text-decoration:none;padding:0.3rem 0.6rem;border-radius:6px;background:#e5e5e5">Home</a>
-      <a href="/how-to-use" style="font-size:0.9rem;color:#555;text-decoration:none;padding:0.3rem 0.6rem;border-radius:6px;transition:background 0.15s" onmouseover="this.style.background='#e5e5e5'" onmouseout="this.style.background=''">How to Use</a>
-      <a href="/about" style="font-size:0.9rem;color:#555;text-decoration:none;padding:0.3rem 0.6rem;border-radius:6px;transition:background 0.15s" onmouseover="this.style.background='#e5e5e5'" onmouseout="this.style.background=''">About</a>
-    <div class="invite">
-      <a href="https://discord.com/oauth2/authorize?client_id=1482929833137799399" target="_blank">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 15 15"><path fill="currentColor" d="M4.42 7.727c0-.534.382-.89.774-.89c.399 0 .783.363.774.882v.008c0 .535-.383.89-.774.89c-.382 0-.774-.359-.774-.89m4.687 0c0-.282.086-.48.194-.599a.62.62 0 0 1 .485-.195c.391 0 .774.355.774.89c0 .534-.383.89-.774.89c-.16 0-.316-.078-.45-.255a1.23 1.23 0 0 1-.229-.73"/><path fill="currentColor" fill-rule="evenodd" d="M3.8 12.142c.277.108.583.217.918.317c-.59.612-1.504 1.47-1.504 1.47C.376 13.839 0 11.514 0 11.514C0 7.38 1.85 2.42 1.85 2.42c1.848-1.387 3.607-1.35 3.607-1.35l.163 1.096c-.852.227-1.726.601-2.663 1.113l.513.94c1.546-.843 2.805-1.236 4.032-1.237c1.226 0 2.483.391 4.025 1.237l.515-.94c-.983-.539-1.896-.925-2.788-1.147l.287-1.062s1.76-.038 3.609 1.349c0 0 1.849 4.959 1.849 9.094c0 0-.376 2.325-3.214 2.415c0 0-.854-.842-1.418-1.449q.444-.136.9-.326a8 8 0 0 0 1.574-.809l-.59-.895c-.492.325-.957.55-1.368.703l-.007.003l-.005.002l-.01.004a8 8 0 0 1-1.744.518l-.009.001a8.5 8.5 0 0 1-3.127-.012a10.3 10.3 0 0 1-1.793-.525c-.504-.197-.935-.406-1.352-.698l-.614.878a7.3 7.3 0 0 0 1.576.818m1.394-6.376c-1.073 0-1.846.93-1.846 1.961c0 1.036.79 1.962 1.846 1.962c1.071 0 1.843-.927 1.845-1.957c.015-1.046-.782-1.966-1.845-1.966m4.592.096c-.507 0-.959.193-1.28.547c-.315.35-.47.818-.47 1.318s.156.995.446 1.378c.293.388.744.68 1.304.68c1.073 0 1.845-.93 1.845-1.962s-.772-1.961-1.845-1.961" clip-rule="evenodd"/></svg>
-      </a>
-      <span class="tooltip">เชิญ Xevra.GPT เข้า Discord</span>
-    </div></div>
+    <div class="nav-right">
+      <a href="/" class="nav-link active">Home</a>
+      <a href="/how-to-use" class="nav-link">How to Use</a>
+      <a href="/about" class="nav-link">About</a>
+      <button id="themeToggle" class="icon-btn" onclick="toggleTheme()"></button>
+      <div class="invite">
+        <a href="https://discord.com/oauth2/authorize?client_id=1482929833137799399" target="_blank" class="icon-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 15 15"><path fill="currentColor" d="M4.42 7.727c0-.534.382-.89.774-.89c.399 0 .783.363.774.882v.008c0 .535-.383.89-.774.89c-.382 0-.774-.359-.774-.89m4.687 0c0-.282.086-.48.194-.599a.62.62 0 0 1 .485-.195c.391 0 .774.355.774.89c0 .534-.383.89-.774.89c-.16 0-.316-.078-.45-.255a1.23 1.23 0 0 1-.229-.73"/><path fill="currentColor" fill-rule="evenodd" d="M3.8 12.142c.277.108.583.217.918.317c-.59.612-1.504 1.47-1.504 1.47C.376 13.839 0 11.514 0 11.514C0 7.38 1.85 2.42 1.85 2.42c1.848-1.387 3.607-1.35 3.607-1.35l.163 1.096c-.852.227-1.726.601-2.663 1.113l.513.94c1.546-.843 2.805-1.236 4.032-1.237c1.226 0 2.483.391 4.025 1.237l.515-.94c-.983-.539-1.896-.925-2.788-1.147l.287-1.062s1.76-.038 3.609 1.349c0 0 1.849 4.959 1.849 9.094c0 0-.376 2.325-3.214 2.415c0 0-.854-.842-1.418-1.449q.444-.136.9-.326a8 8 0 0 0 1.574-.809l-.59-.895c-.492.325-.957.55-1.368.703l-.007.003l-.005.002l-.01.004a8 8 0 0 1-1.744.518l-.009.001a8.5 8.5 0 0 1-3.127-.012a10.3 10.3 0 0 1-1.793-.525c-.504-.197-.935-.406-1.352-.698l-.614.878a7.3 7.3 0 0 0 1.576.818m1.394-6.376c-1.073 0-1.846.93-1.846 1.961c0 1.036.79 1.962 1.846 1.962c1.071 0 1.843-.927 1.845-1.957c.015-1.046-.782-1.966-1.845-1.966m4.592.096c-.507 0-.959.193-1.28.547c-.315.35-.47.818-.47 1.318s.156.995.446 1.378c.293.388.744.68 1.304.68c1.073 0 1.845-.93 1.845-1.962s-.772-1.961-1.845-1.961" clip-rule="evenodd"/></svg>
+        </a>
+        <span class="tooltip">เชิญ Xevra.GPT เข้า Discord</span>
+      </div>
+    </div>
   </nav>
+
   <div class="card">
     <textarea id="input" placeholder="พิมพ์ข้อความที่พิมพ์ผิด layout ที่นี่..."></textarea>
     <button onclick="convert()">แปลง</button>
     <div style="position:relative">
       <div class="output empty" id="output">ผลลัพธ์จะแสดงที่นี่</div>
-      <button id="copyBtn" onclick="copyResult()" style="display:none;position:absolute;top:50%;right:10px;transform:translateY(-50%);width:28px;height:28px;padding:0;background:#111;color:#fff;border:none;border-radius:6px;cursor:pointer;display:none;align-items:center;justify-content:center">
+      <button id="copyBtn" onclick="copyResult()" style="display:none;position:absolute;top:50%;right:10px;transform:translateY(-50%);width:28px;height:28px;padding:0;border-radius:6px;cursor:pointer;align-items:center;justify-content:center">
         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 15 15"><path fill="currentColor" d="m10.5.5l.277-.416L10.651 0H10.5zm3 2h.5v-.268l-.223-.148zm-1 9.5h-8v1h8zM4 11.5v-10H3v10zM4.5 1h6V0h-6zM13 2.5v9h1v-9zM10.223.916l3 2l.554-.832l-3-2zM4.5 12a.5.5 0 0 1-.5-.5H3A1.5 1.5 0 0 0 4.5 13zm8 1a1.5 1.5 0 0 0 1.5-1.5h-1a.5.5 0 0 1-.5.5zM4 1.5a.5.5 0 0 1 .5-.5V0A1.5 1.5 0 0 0 3 1.5zm-3 2v10h1v-10zM2.5 15h8v-1h-8zm0-12h1V2h-1zM12 13.5v-1h-1v1zM10.5 15a1.5 1.5 0 0 0 1.5-1.5h-1a.5.5 0 0 1-.5.5zM1 13.5A1.5 1.5 0 0 0 2.5 15v-1a.5.5 0 0 1-.5-.5zm1-10a.5.5 0 0 1 .5-.5V2A1.5 1.5 0 0 0 1 3.5z"/></svg>
       </button>
     </div>
@@ -165,8 +195,8 @@
 
       const { result, direction } = await res.json();
       const out = document.getElementById("output");
-
       const copyBtn = document.getElementById("copyBtn");
+
       if (direction === "none") {
         out.textContent = "แปลงไม่ได้ ไม่มี mapping ที่รู้จัก";
         out.className = "output empty";
@@ -190,6 +220,25 @@
     document.getElementById("input").addEventListener("keydown", (e) => {
       if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); convert(); }
     });
+
+    // ── Theme toggle ──
+    const SUN = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path stroke-linecap="round" d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>`;
+    const MOON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
+
+    function updateThemeBtn() {
+      const btn = document.getElementById("themeToggle");
+      const dark = document.documentElement.classList.contains("dark");
+      btn.innerHTML = dark ? SUN : MOON;
+      btn.title = dark ? "Light mode" : "Dark mode";
+    }
+
+    function toggleTheme() {
+      const dark = document.documentElement.classList.toggle("dark");
+      localStorage.setItem("theme", dark ? "dark" : "light");
+      updateThemeBtn();
+    }
+
+    updateThemeBtn();
   </script>
 </body>
 </html>

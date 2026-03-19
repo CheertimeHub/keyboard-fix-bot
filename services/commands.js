@@ -78,25 +78,28 @@ function checkCmp(val, op, target) {
 }
 
 function formatRoll({ count, modifier, keepMode, keepN, cmpOp, cmpVal }, { sorted, sum }) {
-  let diceDisplay;
+  // Only show dice breakdown when there are multiple dice or keep/drop involved
+  const showDice = count > 1 || (keepMode && keepN);
+  let diceDisplay = "";
 
-  if (keepMode && keepN) {
-    // Show sorted high→low, strikethrough the dropped portion
-    diceDisplay =
-      "[" +
-      sorted
-        .map((r, i) => {
-          const kept =
-            keepMode === "kh" ? i < keepN :
-            keepMode === "kl" ? i >= sorted.length - keepN :
-            keepMode === "dh" ? i >= keepN :
-            /* dl */            i < sorted.length - keepN;
-          return kept ? `${r}` : `~~${r}~~`;
-        })
-        .join(", ") +
-      "]";
-  } else {
-    diceDisplay = `[${sorted.join(", ")}]`;
+  if (showDice) {
+    if (keepMode && keepN) {
+      diceDisplay =
+        "[" +
+        sorted
+          .map((r, i) => {
+            const kept =
+              keepMode === "kh" ? i < keepN :
+              keepMode === "kl" ? i >= sorted.length - keepN :
+              keepMode === "dh" ? i >= keepN :
+              /* dl */            i < sorted.length - keepN;
+            return kept ? `${r}` : `~~${r}~~`;
+          })
+          .join(", ") +
+        "]";
+    } else {
+      diceDisplay = `[${sorted.join(", ")}]`;
+    }
   }
 
   const modStr =
@@ -104,9 +107,16 @@ function formatRoll({ count, modifier, keepMode, keepN, cmpOp, cmpVal }, { sorte
 
   if (cmpOp && cmpVal !== null) {
     const pass = checkCmp(sum, cmpOp, cmpVal);
-    return `**${sum}** ${diceDisplay}${modStr} ${cmpOp} ${cmpVal} → ${pass ? "✓" : "✗"}`;
+    if (diceDisplay) {
+      return `**${sum}** ${diceDisplay}${modStr} ${cmpOp} ${cmpVal} → ${pass ? "✓" : "✗"}`;
+    }
+    // Single die: show die value + modifier clearly
+    const numStr = modifier !== 0 ? `${sorted[0]}${modStr} = **${sum}**` : `**${sum}**`;
+    return `${numStr} ${cmpOp} ${cmpVal} → ${pass ? "✓" : "✗"}`;
   }
-  return `${diceDisplay}${modStr} = **${sum}**`;
+  if (diceDisplay) return `${diceDisplay}${modStr} = **${sum}**`;
+  // Single die: show die value + modifier, or just bold sum if no modifier
+  return modifier !== 0 ? `${sorted[0]}${modStr} = **${sum}**` : `**${sum}**`;
 }
 
 function buildLabel({ repeat, count, sides, modifier, keepMode, keepN, cmpOp, cmpVal }) {
@@ -130,13 +140,21 @@ function executeDiceExpr(exprStr) {
     return `🎲 ${formatRoll(parsed, result)} (${label})`;
   }
 
-  const lines = [`🎲 ${repeat}#${label}`];
+  // Collect all results then format compactly
+  const allResults = [];
   let successes = 0;
   for (let i = 0; i < repeat; i++) {
-    const result = rollOnce(count, sides, modifier, keepMode, keepN);
-    if (cmpOp && checkCmp(result.sum, cmpOp, cmpVal)) successes++;
-    lines.push(`▸ ${formatRoll(parsed, result)}`);
+    const r = rollOnce(count, sides, modifier, keepMode, keepN);
+    if (cmpOp && checkCmp(r.sum, cmpOp, cmpVal)) successes++;
+    allResults.push(r);
   }
+
+  const parts = allResults.map(({ sum }) => {
+    if (cmpOp) return `\`${sum}\`${checkCmp(sum, cmpOp, cmpVal) ? "✓" : "✗"}`;
+    return `\`${sum}\``;
+  });
+
+  const lines = [`🎲 **${repeat}#${label}**`, parts.join("  ")];
   if (cmpOp) lines.push(`Successes: **${successes}/${repeat}**`);
 
   return lines.join("\n");
