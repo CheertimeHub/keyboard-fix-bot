@@ -3,250 +3,287 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Xevra.GPT</title>
-  <script>if((localStorage.getItem("theme")??"dark")==="dark")document.documentElement.classList.add("dark");</script>
+  <title>Xevra.GPT — แก้ keyboard layout</title>
+  <script>if((localStorage.getItem("theme")??"light")==="dark")document.documentElement.classList.add("dark");</script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
-    html, body {
-      height: 100%;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    }
-
     body {
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       background: #f0f2f5;
       color: #111;
-      transition: color 0.25s;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 4.5rem 1.5rem 1.5rem;
+      transition: background 0.25s, color 0.25s;
     }
 
     /* ── Nav ── */
     nav {
       position: fixed;
-      top: 0; left: 0; right: 0; z-index: 100;
-      padding: 0.85rem 1.5rem;
+      top: 0; left: 0; right: 0;
+      padding: 0.75rem 1.5rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
       background: #fff;
       border-bottom: 1px solid #e5e5e5;
       transition: background 0.25s, border-color 0.25s;
+      z-index: 100;
     }
-
-    h1 { font-size: 1.1rem; font-weight: 800; letter-spacing: -0.01em; }
-
-    .nav-right { display: flex; align-items: center; gap: 0.4rem; }
-
+    nav h1 { font-size: 1.1rem; font-weight: 800; }
+    .nav-right { display: flex; align-items: center; gap: 0.5rem; }
     .nav-link {
-      font-size: 0.88rem; color: #666;
-      text-decoration: none; padding: 0.3rem 0.6rem;
-      border-radius: 6px; transition: background 0.15s, color 0.15s;
+      font-size: 0.9rem; color: #555;
+      text-decoration: none;
+      padding: 0.3rem 0.6rem;
+      border-radius: 6px;
+      transition: background 0.15s, color 0.15s;
     }
-    .nav-link:hover { background: #f0f0f0; color: #111; }
-    .nav-link.active { font-weight: 600; color: #111; background: #f0f0f0; }
-
+    .nav-link:hover { background: #e5e5e5; color: #111; }
+    .nav-link.active { font-weight: 600; color: #111; background: #e5e5e5; }
     .icon-btn {
       display: flex; align-items: center; justify-content: center;
-      width: 32px; height: 32px; border-radius: 8px;
-      background: none; border: none; cursor: pointer;
-      color: #555; text-decoration: none; transition: background 0.15s, color 0.15s;
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      background: none; border: none;
+      cursor: pointer; color: #111;
+      text-decoration: none;
+      transition: background 0.15s;
     }
-    .icon-btn:hover { background: #f0f0f0; color: #111; }
-
+    .icon-btn:hover { background: #e5e5e5; }
     .invite { position: relative; display: flex; align-items: center; }
     .invite .tooltip {
-      display: none; position: absolute;
+      display: none;
+      position: absolute;
       top: calc(100% + 8px); right: 0;
       background: #111; color: #fff;
-      font-size: 0.75rem; white-space: nowrap;
-      padding: 0.3rem 0.6rem; border-radius: 6px;
+      font-size: 0.78rem; white-space: nowrap;
+      padding: 0.35rem 0.6rem; border-radius: 6px;
     }
     .invite:hover .tooltip { display: block; }
 
-    /* ── Chat layout ── */
-    .chat-wrap {
-      flex: 1;
+    /* ── Chat card ── */
+    .chat-card {
+      width: min(860px, 100%);
+      flex: 1; /* fill remaining viewport height */
+      background: rgba(255, 255, 255, 0.65);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid rgba(255,255,255,0.5);
+      border-radius: 20px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.12);
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      padding-top: 57px;
-      max-width: 720px;
-      width: 100%;
-      margin: 0 auto;
+      min-height: 0; /* needed for flex children to shrink */
     }
 
+    /* Messages area — fills card, fade at top */
     .messages {
       flex: 1;
+      min-height: 0;
       overflow-y: auto;
-      padding: 1.5rem 1.25rem 0.75rem;
+      overflow-x: hidden;
+      padding: 1.5rem 1.5rem 0.75rem;
       display: flex;
       flex-direction: column;
-      gap: 0.4rem;
+      gap: 0.65rem;
       scroll-behavior: smooth;
+      /* Fade out old messages at top */
+      mask-image: linear-gradient(to bottom, transparent 0%, black 22%);
+      -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 22%);
     }
-    .messages::-webkit-scrollbar { width: 4px; }
-    .messages::-webkit-scrollbar-track { background: transparent; }
-    .messages::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 2px; }
+    .messages::-webkit-scrollbar { width: 0; }
 
-    /* ── Message rows ── */
-    @keyframes msgIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to   { opacity: 1; transform: translateY(0); }
+    /* ── Responsive ── */
+    @media (max-width: 600px) {
+      body { padding: 4rem 0 0; }
+      .chat-card {
+        width: 100%;
+        border-radius: 16px 16px 0 0;
+        box-shadow: none;
+      }
     }
 
-    .msg-row {
+    /* Bubble row */
+    .bubble-row {
       display: flex;
       align-items: flex-end;
-      gap: 0.55rem;
-      animation: msgIn 0.28s ease both;
+      gap: 0.45rem;
+      opacity: 0;
+      transform: translateY(8px);
+      animation: bubbleIn 0.3s ease forwards;
     }
-    .msg-row.user { flex-direction: row-reverse; align-self: flex-end; max-width: 75%; }
-    .msg-row.bot  { align-self: flex-start; max-width: 75%; }
+    @keyframes bubbleIn {
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .bubble-row.user { flex-direction: row-reverse; }
 
-    /* Consecutive messages from same sender — reduce gap */
-    .msg-row + .msg-row.bot,
-    .msg-row + .msg-row.user { margin-top: 0.15rem; }
-
-    /* Show avatar only on last in group */
-    .msg-row.bot .avatar { visibility: visible; }
-    .msg-row.bot.hide-avatar .avatar { visibility: hidden; }
-
-    .avatar {
-      width: 34px; height: 34px; border-radius: 50%;
-      background: #963931; color: #fff;
-      font-size: 0.72rem; font-weight: 800;
+    /* Small avatar next to bubble */
+    .bubble-avatar {
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #963931, #c0564a);
+      flex-shrink: 0;
       display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0; letter-spacing: -0.5px;
+      color: #fff; font-size: 1rem; font-weight: 700;
+      overflow: hidden;
+      align-self: flex-end;
     }
+    .bubble-avatar img { width: 100%; height: 100%; object-fit: cover; }
 
-    .bubble-col { display: flex; flex-direction: column; gap: 0.25rem; }
-
-    .sender-name {
-      font-size: 0.73rem; font-weight: 600;
-      color: #963931; padding-left: 0.1rem;
+    /* Bubble wrap — holds bubble + direction label */
+    .bubble-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      max-width: 78%;
     }
+    .bubble-row.user .bubble-wrap { align-items: flex-end; }
 
+    /* Bubble */
     .bubble {
-      padding: 0.6rem 0.9rem;
-      border-radius: 18px;
-      font-size: 0.93rem; line-height: 1.55;
+      padding: 1rem 1.4rem;
+      border-radius: 22px;
+      font-size: 1.35rem;
+      line-height: 1.6;
+      position: relative;
       word-break: break-word;
     }
-
-    .msg-row.bot .bubble {
-      background: #fff;
-      border: 1px solid #e5e5e5;
-      border-bottom-left-radius: 5px;
+    /* Bot bubble */
+    .bubble-row.bot .bubble {
+      background: rgba(255,255,255,0.85);
       color: #111;
+      border-bottom-left-radius: 4px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
     }
-    .msg-row.user .bubble {
+    .bubble-row.bot .bubble::before {
+      content: "";
+      position: absolute;
+      bottom: 0; left: -6px;
+      border: 6px solid transparent;
+      border-right-color: rgba(255,255,255,0.85);
+      border-bottom-color: rgba(255,255,255,0.85);
+    }
+    /* User bubble */
+    .bubble-row.user .bubble {
       background: #963931;
-      border-bottom-right-radius: 5px;
       color: #fff;
+      border-bottom-right-radius: 4px;
+      box-shadow: 0 1px 6px rgba(150,57,49,0.35);
+    }
+    .bubble-row.user .bubble::before {
+      content: "";
+      position: absolute;
+      bottom: 0; right: -6px;
+      border: 6px solid transparent;
+      border-left-color: #963931;
+      border-bottom-color: #963931;
     }
 
-    .dir-tag {
-      font-size: 0.7rem; color: #999;
-      padding-left: 0.1rem;
-      display: flex; align-items: center; gap: 0.3rem;
+    /* Direction label — below bubble */
+    .direction-label {
+      font-size: 0.9rem;
+      color: #999;
+      margin-top: 0.3rem;
+      padding: 0 0.25rem;
+      letter-spacing: 0.01em;
     }
-    .dir-tag::before {
-      content: '';
-      display: inline-block;
-      width: 6px; height: 6px; border-radius: 50%;
-      background: #963931; opacity: 0.6;
+    .bubble-row.user .direction-label { color: rgba(255,255,255,0.55); }
+
+    /* Divider */
+    .divider {
+      text-align: center;
+      font-size: 0.75rem;
+      color: #aaa;
+      margin: 0.15rem 0;
+      opacity: 0;
+      animation: bubbleIn 0.3s ease forwards;
     }
 
-    /* Copy button on bot bubble */
-    .bubble-wrap { position: relative; }
-    .copy-btn {
-      position: absolute; top: 50%; right: -34px;
-      transform: translateY(-50%);
-      width: 26px; height: 26px;
-      border-radius: 6px; border: none; cursor: pointer;
-      background: #f0f0f0; color: #888;
-      display: none; align-items: center; justify-content: center;
-      transition: background 0.15s, color 0.15s;
-    }
-    .bubble-wrap:hover .copy-btn { display: flex; }
-    .copy-btn:hover { background: #e0e0e0; color: #111; opacity: 1; }
-
-    /* ── Typing indicator ── */
-    @keyframes bounce {
-      0%, 60%, 100% { transform: translateY(0); }
-      30% { transform: translateY(-5px); }
-    }
-
+    /* Typing indicator */
+    .typing-row { display: flex; align-items: flex-end; gap: 0.45rem; }
     .typing-bubble {
-      display: flex; align-items: center; gap: 4px;
-      padding: 0.65rem 0.9rem;
-      background: #fff; border: 1px solid #e5e5e5;
-      border-radius: 18px; border-bottom-left-radius: 5px;
-      width: fit-content;
+      background: rgba(255,255,255,0.85);
+      border-radius: 18px;
+      border-bottom-left-radius: 4px;
+      padding: 0.65rem 1rem;
+      display: flex; gap: 4px; align-items: center;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
     }
-    .dot {
-      width: 6px; height: 6px; border-radius: 50%;
-      background: #bbb;
-      animation: bounce 1.1s ease-in-out infinite;
+    .typing-bubble span {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #aaa;
+      animation: bounce 1s ease infinite;
     }
-    .dot:nth-child(2) { animation-delay: 0.18s; }
-    .dot:nth-child(3) { animation-delay: 0.36s; }
-
-    /* ── Divider ── */
-    .chat-divider {
-      display: flex; align-items: center; gap: 0.75rem;
-      margin: 1rem 0;
-      animation: msgIn 0.3s ease both;
-    }
-    .chat-divider::before,
-    .chat-divider::after {
-      content: ''; flex: 1;
-      border-top: 1px solid #e5e5e5;
-    }
-    .chat-divider span {
-      font-size: 0.73rem; color: #bbb;
-      white-space: nowrap; font-weight: 500;
+    .typing-bubble span:nth-child(2) { animation-delay: 0.15s; }
+    .typing-bubble span:nth-child(3) { animation-delay: 0.3s; }
+    @keyframes bounce {
+      0%, 80%, 100% { transform: translateY(0); }
+      40% { transform: translateY(-5px); }
     }
 
-    /* ── Chat input bar ── */
-    .chat-input-bar {
-      padding: 0.75rem 1.25rem 1rem;
-      background: #f0f2f5;
-      transition: background 0.25s;
+    /* Input area */
+    .input-area {
+      display: flex;
+      align-items: flex-end;
+      gap: 0.5rem;
+      padding: 0.85rem 1.25rem 1rem;
+      border-top: 1px solid rgba(0,0,0,0.07);
+      flex-shrink: 0;
     }
-
-    .input-box {
-      display: flex; align-items: flex-end; gap: 0.5rem;
-      background: #fff;
-      border: 1px solid #ddd;
-      border-radius: 14px;
-      padding: 0.5rem 0.5rem 0.5rem 1rem;
-      transition: border-color 0.2s, background 0.25s;
-    }
-    .input-box:focus-within { border-color: #963931; }
-
-    #chatInput {
+    .input-wrap {
       flex: 1;
-      background: none; border: none; outline: none;
-      color: #111; font-size: 0.93rem; font-family: inherit;
-      resize: none; line-height: 1.5;
-      min-height: 22px; max-height: 140px;
+      display: flex;
+      align-items: flex-end;
+      background: rgba(255,255,255,0.6);
+      border-radius: 12px;
+      padding: 0.45rem 0.75rem;
+      gap: 0.5rem;
+      border: 1px solid rgba(0,0,0,0.1);
+    }
+    textarea {
+      flex: 1;
+      resize: none;
+      border: none;
+      background: transparent;
+      font-family: inherit;
+      font-size: 0.9rem;
+      color: #111;
+      line-height: 1.4;
+      max-height: 120px;
+      outline: none;
       overflow-y: auto;
+      transition: color 0.25s;
     }
-    #chatInput::placeholder { color: #bbb; }
-
+    textarea::placeholder { color: #aaa; }
+    .clear-btn {
+      background: none; border: none;
+      cursor: pointer; color: #aaa;
+      font-size: 1rem; line-height: 1;
+      padding: 0; transition: color 0.15s;
+      display: none;
+      flex-shrink: 0;
+    }
+    .clear-btn:hover { color: #555; }
     .send-btn {
-      width: 34px; height: 34px; flex-shrink: 0;
-      border-radius: 9px; border: none; cursor: pointer;
-      background: #963931; color: #fff;
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: #963931;
+      border: none; cursor: pointer;
+      color: #fff; font-size: 1rem;
       display: flex; align-items: center; justify-content: center;
-      transition: opacity 0.15s;
+      flex-shrink: 0;
+      transition: background 0.15s, opacity 0.15s;
+      opacity: 0.4;
     }
-    .send-btn:hover { opacity: 0.85; }
-    .send-btn:disabled { opacity: 0.4; cursor: default; }
+    .send-btn.active { opacity: 1; }
+    .send-btn:hover { background: #7a2e27; }
 
     /* ── Dark mode ── */
     html.dark body {
@@ -255,43 +292,183 @@
       color: #e2e8f0;
     }
     html.dark nav {
-      background: rgba(13, 10, 10, 0.88);
-      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      background: rgba(13, 17, 23, 0.88);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
       border-color: #3d1a17;
     }
-    html.dark h1 { color: #e2e8f0; }
+    html.dark nav h1 { color: #e2e8f0; }
     html.dark .nav-link { color: #94a3b8; }
     html.dark .nav-link:hover { background: rgba(255,255,255,0.07); color: #e2e8f0; }
-    html.dark .nav-link.active { background: rgba(150,57,49,0.2); color: #e8998f; }
+    html.dark .nav-link.active { background: rgba(150,57,49,0.18); color: #e8998f; font-weight: 600; }
     html.dark .icon-btn { color: #94a3b8; }
     html.dark .icon-btn:hover { background: rgba(255,255,255,0.07); color: #e2e8f0; }
     html.dark .invite .tooltip { background: #e2e8f0; color: #0d1117; }
 
-    html.dark .msg-row.bot .bubble {
-      background: rgba(28, 10, 8, 0.82);
-      border-color: #3d1a17; color: #e2e8f0;
-      backdrop-filter: blur(6px);
+    html.dark .chat-card {
+      background: rgba(13, 17, 23, 0.45);
+      border-color: rgba(255,255,255,0.06);
+      box-shadow: 0 8px 40px rgba(0,0,0,0.4);
+    }
+    html.dark .messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); }
+    html.dark .bubble-row.bot .bubble {
+      background: rgba(45, 49, 57, 0.9);
+      color: #e2e8f0;
+    }
+    html.dark .bubble-row.bot .bubble::before {
+      border-right-color: rgba(45, 49, 57, 0.9);
+      border-bottom-color: rgba(45, 49, 57, 0.9);
     }
     html.dark .typing-bubble {
-      background: rgba(28, 10, 8, 0.82);
-      border-color: #3d1a17;
+      background: rgba(45, 49, 57, 0.9);
     }
-    html.dark .dot { background: #7a4040; }
-    html.dark .dir-tag { color: #7a6060; }
-    html.dark .copy-btn { background: rgba(255,255,255,0.08); color: #94a3b8; }
-    html.dark .copy-btn:hover { background: rgba(255,255,255,0.15); color: #e2e8f0; }
-    html.dark .chat-divider::before,
-    html.dark .chat-divider::after { border-color: rgba(255,255,255,0.08); }
-    html.dark .chat-divider span { color: rgba(255,255,255,0.25); }
-    html.dark .chat-input-bar { background: rgba(13, 10, 10, 0.5); }
-    html.dark .input-box {
-      background: rgba(14, 5, 4, 0.85);
-      border-color: #3d1a17;
+    html.dark .typing-bubble span { background: #6b7280; }
+    html.dark .input-area { border-color: rgba(255,255,255,0.06); }
+    html.dark .input-wrap {
+      background: rgba(255,255,255,0.07);
+      border-color: rgba(255,255,255,0.1);
     }
-    html.dark .input-box:focus-within { border-color: #963931; }
-    html.dark #chatInput { color: #e2e8f0; }
-    html.dark #chatInput::placeholder { color: #4a3030; }
-    html.dark .messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); }
+    html.dark textarea { color: #e2e8f0; }
+    html.dark .clear-btn { color: #6b7280; }
+    html.dark .clear-btn:hover { color: #94a3b8; }
+    html.dark .divider { color: #4a5568; }
+    html.dark .direction-label { color: rgba(255,255,255,0.35); }
+
+    /* ── Glitch Overlay ── */
+    #glitchOverlay {
+      position: fixed; inset: 0;
+      pointer-events: none;
+      z-index: 999;
+      display: none;
+      background: rgba(0, 0, 0, 0.92);
+    }
+    #glitchOverlay.active { display: block; }
+
+    /* Red horizontal noise bands — matches the GIF */
+    .glitch-bands {
+      position: absolute; inset: 0;
+      animation: redBands 0.09s steps(1) infinite;
+    }
+    @keyframes redBands {
+      0%   { background: linear-gradient(
+               transparent 0%,   transparent 6%,
+               rgba(255,0,0,0.75) 6%,  rgba(255,0,0,0.75) 7.5%,
+               transparent 7.5%, transparent 11%,
+               rgba(255,0,0,0.45) 11%, rgba(255,0,0,0.45) 12%,
+               transparent 12%,  transparent 86%,
+               rgba(255,0,0,0.85) 86%, rgba(255,0,0,0.85) 88.5%,
+               transparent 88.5%); }
+      20%  { background: linear-gradient(
+               transparent 0%,   transparent 2%,
+               rgba(255,0,0,0.6)  2%,  rgba(255,0,0,0.6)  3.5%,
+               transparent 3.5%, transparent 9%,
+               rgba(255,0,0,0.8)  9%,  rgba(255,0,0,0.8)  10%,
+               transparent 10%,  transparent 92%,
+               rgba(255,0,0,0.7)  92%, rgba(255,0,0,0.7)  94%,
+               transparent 94%); }
+      40%  { background: linear-gradient(
+               transparent 0%,   transparent 4%,
+               rgba(255,0,0,0.9)  4%,  rgba(255,0,0,0.9)  5%,
+               transparent 5%,   transparent 14%,
+               rgba(255,0,0,0.5) 14%, rgba(255,0,0,0.5) 15.5%,
+               transparent 15.5%,transparent 80%,
+               rgba(255,0,0,0.65) 80%,rgba(255,0,0,0.65) 82%,
+               transparent 82%); }
+      60%  { background: linear-gradient(
+               transparent 0%,   transparent 8%,
+               rgba(255,0,0,0.7)  8%,  rgba(255,0,0,0.7)  9%,
+               transparent 9%,   transparent 17%,
+               rgba(255,0,0,0.4) 17%, rgba(255,0,0,0.4) 18%,
+               transparent 18%,  transparent 88%,
+               rgba(255,0,0,0.9) 88%, rgba(255,0,0,0.9) 90.5%,
+               transparent 90.5%); }
+      80%  { background: linear-gradient(
+               transparent 0%,   transparent 1%,
+               rgba(255,0,0,0.55) 1%,  rgba(255,0,0,0.55) 2.5%,
+               transparent 2.5%, transparent 7%,
+               rgba(255,0,0,0.75) 7%,  rgba(255,0,0,0.75) 8%,
+               transparent 8%,   transparent 83%,
+               rgba(255,0,0,0.8)  83%, rgba(255,0,0,0.8)  85.5%,
+               transparent 85.5%); }
+      100% { background: linear-gradient(
+               transparent 0%,   transparent 5%,
+               rgba(255,0,0,0.65) 5%,  rgba(255,0,0,0.65) 6.5%,
+               transparent 6.5%, transparent 13%,
+               rgba(255,0,0,0.5) 13%, rgba(255,0,0,0.5) 14%,
+               transparent 14%,  transparent 89%,
+               rgba(255,0,0,0.7)  89%, rgba(255,0,0,0.7)  91%,
+               transparent 91%); }
+    }
+
+    /* Intro-only: hide bands during horror */
+    #glitchOverlay.horror .glitch-bands { display: none; }
+
+    /* Old-style horror layers — hidden normally, shown during horror */
+    .scanlines, .rgb-r, .rgb-b { display: none; }
+    #glitchOverlay.horror .scanlines,
+    #glitchOverlay.horror .rgb-r,
+    #glitchOverlay.horror .rgb-b { display: block; }
+
+    .scanlines {
+      position: absolute; inset: 0;
+      background: repeating-linear-gradient(
+        0deg, transparent, transparent 2px,
+        rgba(180,0,0,0.18) 2px, rgba(180,0,0,0.18) 4px
+      );
+      animation: scanMove 6s linear infinite;
+    }
+    @keyframes scanMove { to { background-position-y: 80px; } }
+    .rgb-r {
+      position: absolute; inset: 0;
+      background: rgba(255, 0, 0, 0.1);
+      mix-blend-mode: screen;
+      animation: rgbShift 0.08s steps(1) infinite;
+    }
+    .rgb-b {
+      position: absolute; inset: 0;
+      background: rgba(100, 0, 0, 0.07);
+      mix-blend-mode: screen;
+      animation: rgbShift 0.11s steps(1) infinite reverse;
+    }
+    @keyframes rgbShift {
+      0%   { transform: translateX(0); }
+      33%  { transform: translateX(5px) scaleY(1.01); }
+      66%  { transform: translateX(-5px); }
+      100% { transform: translateX(2px); }
+    }
+    @keyframes cardGlitch {
+      0%,100% { transform: none; filter: none; }
+      10%  { transform: translateX(-5px) skewX(-1.5deg); filter: brightness(1.15); }
+      20%  { transform: translateX(5px)  skewX(1.5deg);  filter: brightness(0.85); }
+      35%  { transform: translateX(-3px); filter: hue-rotate(20deg); }
+      55%  { transform: translateX(3px)  scaleY(0.997); filter: none; }
+      75%  { transform: translateX(-1px); }
+    }
+    .chat-card.glitching { animation: cardGlitch 0.13s steps(1) infinite; }
+
+    /* Horror mode */
+    #glitchOverlay.horror {
+      background: rgba(4, 0, 0, 0.92);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .horror-msg {
+      display: none;
+      position: relative; z-index: 1;
+      color: #cc0000;
+      font-size: 1.3rem; font-weight: 700;
+      text-align: center; letter-spacing: 0.08em;
+      text-shadow: 0 0 16px rgba(255,0,0,0.8);
+      animation: horrorFlicker 0.18s steps(1) infinite;
+    }
+    #glitchOverlay.horror .horror-msg { display: block; }
+    @keyframes horrorFlicker {
+      0%,100% { opacity: 1; }
+      40% { opacity: 0.05; }
+      55% { opacity: 0.8; }
+      72% { opacity: 0.1; }
+    }
   </style>
 </head>
 <body>
@@ -311,156 +488,273 @@
     </div>
   </nav>
 
-  <div class="chat-wrap">
-    <div class="messages" id="messages"></div>
-    <div class="chat-input-bar">
-      <div class="input-box">
-        <textarea id="chatInput" rows="1" placeholder="พิมพ์ข้อความที่พิมพ์ผิด layout ที่นี่..."></textarea>
-        <button class="send-btn" id="sendBtn" onclick="sendMessage()">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7"/></svg>
-        </button>
+  <div class="chat-card">
+    <!-- Messages — spacer pushes content to bottom -->
+    <div class="messages" id="messages">
+      <div id="msgSpacer" style="flex:1;min-height:0;"></div>
+    </div>
+
+    <!-- Input -->
+    <div class="input-area">
+      <div class="input-wrap">
+        <textarea id="inputBox" rows="1" placeholder="พิมพ์ข้อความที่อยากแปล..."></textarea>
+        <button class="clear-btn" id="clearBtn" onclick="clearInput()">✕</button>
       </div>
+      <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
     </div>
   </div>
 
+  <div id="glitchOverlay">
+    <div class="glitch-bands"></div>
+    <div class="scanlines"></div>
+    <div class="rgb-r"></div>
+    <div class="rgb-b"></div>
+    <div class="horror-msg" id="horrorMsg"></div>
+  </div>
+
   <script>
-    // ── SVGs ──
-    const SUN  = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path stroke-linecap="round" d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>`;
+    /* ── Theme ── */
+    const SUN = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path stroke-linecap="round" d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>`;
     const MOON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
-    const COPY_SVG  = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 15 15"><path fill="currentColor" d="m10.5.5l.277-.416L10.651 0H10.5zm3 2h.5v-.268l-.223-.148zm-1 9.5h-8v1h8zM4 11.5v-10H3v10zM4.5 1h6V0h-6zM13 2.5v9h1v-9zM10.223.916l3 2l.554-.832l-3-2zM4.5 12a.5.5 0 0 1-.5-.5H3A1.5 1.5 0 0 0 4.5 13zm8 1a1.5 1.5 0 0 0 1.5-1.5h-1a.5.5 0 0 1-.5.5zM4 1.5a.5.5 0 0 1 .5-.5V0A1.5 1.5 0 0 0 3 1.5zm-3 2v10h1v-10zM2.5 15h8v-1h-8zm0-12h1V2h-1zM12 13.5v-1h-1v1zM10.5 15a1.5 1.5 0 0 0 1.5-1.5h-1a.5.5 0 0 1-.5.5zM1 13.5A1.5 1.5 0 0 0 2.5 15v-1a.5.5 0 0 1-.5-.5zm1-10a.5.5 0 0 1 .5-.5V2A1.5 1.5 0 0 0 1 3.5z"/></svg>`;
-    const CHECK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 15 15"><path fill="currentColor" fill-rule="evenodd" d="M11.467 3.727c.289.189.37.576.181.865l-4.25 6.5a.625.625 0 0 1-.944.12l-2.75-2.5a.625.625 0 0 1 .841-.925l2.208 2.007l3.849-5.886a.625.625 0 0 1 .865-.181" clip-rule="evenodd"/></svg>`;
+    function updateThemeBtn() {
+      const btn = document.getElementById("themeToggle");
+      const dark = document.documentElement.classList.contains("dark");
+      btn.innerHTML = dark ? SUN : MOON;
+      btn.title = dark ? "Light mode" : "Dark mode";
+    }
+    function toggleTheme() {
+      const dark = document.documentElement.classList.toggle("dark");
+      localStorage.setItem("theme", dark ? "dark" : "light");
+      updateThemeBtn();
+    }
+    updateThemeBtn();
 
-    const DIR_LABELS = {
-      "eng→thai": "อังกฤษ → ไทย",
-      "thai→eng": "ไทย → อังกฤษ",
-      "caps-fix":  "แก้ Caps Lock",
-    };
+    /* ── Bot info (avatar for bubbles only) ── */
+    let botAvatarUrl = null;
+    fetch("/api/bot-info").then(r => r.json()).then(d => {
+      if (d.avatar) {
+        botAvatarUrl = d.avatar;
+        document.querySelectorAll(".bubble-avatar.is-bot").forEach(el => {
+          el.innerHTML = `<img src="${d.avatar}" style="width:100%;height:100%;object-fit:cover;" alt="">`;
+        });
+      }
+    }).catch(() => {});
 
+    /* ── Messages ── */
     const messagesEl = document.getElementById("messages");
-    let debounceTimer;
 
-    // ── DOM helpers ──
-    function scrollBottom() {
-      messagesEl.scrollTo({ top: messagesEl.scrollHeight, behavior: "smooth" });
+    function getBotAvatarInner() {
+      if (botAvatarUrl) return `<img src="${botAvatarUrl}" style="width:100%;height:100%;object-fit:cover;" alt="">`;
+      return "X";
     }
 
-    function addUserBubble(text) {
-      const row = document.createElement("div");
-      row.className = "msg-row user";
-      row.innerHTML = `<div class="bubble">${escHtml(text)}</div>`;
-      messagesEl.appendChild(row);
-      scrollBottom();
-      return row;
+    // badge = direction label string shown below bubble, or null
+    function addBubble(who, text, delay = 0, badge = null) {
+      return new Promise(resolve => {
+        setTimeout(() => {
+          const row = document.createElement("div");
+          row.className = `bubble-row ${who}`;
+          const labelHtml = badge ? `<div class="direction-label">${badge}</div>` : "";
+          if (who === "bot") {
+            row.innerHTML = `
+              <div class="bubble-avatar is-bot">${getBotAvatarInner()}</div>
+              <div class="bubble-wrap">
+                <div class="bubble">${text}</div>
+                ${labelHtml}
+              </div>`;
+          } else {
+            row.innerHTML = `
+              <div class="bubble-wrap">
+                <div class="bubble">${text}</div>
+                ${labelHtml}
+              </div>`;
+          }
+          messagesEl.appendChild(row);
+          messagesEl.scrollTop = messagesEl.scrollHeight;
+          resolve();
+        }, delay);
+      });
     }
 
-    function addBotBubble(text, direction) {
-      const dirHtml = direction && direction !== "none"
-        ? `<div class="dir-tag">${DIR_LABELS[direction] ?? direction}</div>`
-        : "";
-      const row = document.createElement("div");
-      row.className = "msg-row bot";
-      row.innerHTML = `
-        <div class="avatar">X</div>
-        <div class="bubble-col">
-          <div class="sender-name">Xevra.GPT</div>
-          <div class="bubble-wrap">
-            <div class="bubble">${escHtml(text)}</div>
-            <button class="copy-btn" title="คัดลอก" onclick="copyBubble(this, ${JSON.stringify(text)})">${COPY_SVG}</button>
-          </div>
-          ${dirHtml}
-        </div>`;
-      messagesEl.appendChild(row);
-      scrollBottom();
-      return row;
+    function addDivider(text, delay = 0) {
+      return new Promise(resolve => {
+        setTimeout(() => {
+          const el = document.createElement("div");
+          el.className = "divider";
+          el.textContent = text;
+          messagesEl.appendChild(el);
+          messagesEl.scrollTop = messagesEl.scrollHeight;
+          resolve();
+        }, delay);
+      });
     }
 
-    function addBotError(text) {
-      const row = document.createElement("div");
-      row.className = "msg-row bot";
-      row.innerHTML = `
-        <div class="avatar">X</div>
-        <div class="bubble-col">
-          <div class="sender-name">Xevra.GPT</div>
-          <div class="bubble" style="opacity:0.6;font-style:italic">${escHtml(text)}</div>
-        </div>`;
-      messagesEl.appendChild(row);
-      scrollBottom();
+    function showTyping(delay = 0) {
+      return new Promise(resolve => {
+        setTimeout(() => {
+          const row = document.createElement("div");
+          row.className = "typing-row";
+          row.id = "typingIndicator";
+          row.innerHTML = `
+            <div class="bubble-avatar is-bot">${getBotAvatarInner()}</div>
+            <div class="typing-bubble"><span></span><span></span><span></span></div>`;
+          messagesEl.appendChild(row);
+          messagesEl.scrollTop = messagesEl.scrollHeight;
+          resolve();
+        }, delay);
+      });
     }
 
-    function showTyping() {
-      const row = document.createElement("div");
-      row.className = "msg-row bot";
-      row.id = "typingRow";
-      row.innerHTML = `
-        <div class="avatar">X</div>
-        <div class="typing-bubble">
-          <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-        </div>`;
-      messagesEl.appendChild(row);
-      scrollBottom();
-    }
-
-    function hideTyping() {
-      const el = document.getElementById("typingRow");
+    function removeTyping() {
+      const el = document.getElementById("typingIndicator");
       if (el) el.remove();
     }
 
-    function addDivider(text) {
-      const el = document.createElement("div");
-      el.className = "chat-divider";
-      el.innerHTML = `<span>${text}</span>`;
-      messagesEl.appendChild(el);
-      scrollBottom();
+    const dirLabel = { "eng-to-thai": "ENG → TH", "thai-to-eng": "TH → ENG", "caps-fix": "Caps Fix" };
+
+    /* ── Glitch helpers ── */
+    function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+    // tempDark: switch dark during glitch then revert to light after
+    function triggerGlitch(duration, tempDark = false) {
+      const overlay = document.getElementById("glitchOverlay");
+      const card = document.querySelector(".chat-card");
+      if (tempDark) {
+        document.documentElement.classList.add("dark");
+        updateThemeBtn();
+      }
+      overlay.classList.add("active");
+      card.classList.add("glitching");
+      setTimeout(() => {
+        overlay.classList.remove("active");
+        card.classList.remove("glitching");
+        if (tempDark) {
+          document.documentElement.classList.remove("dark");
+          localStorage.setItem("theme", "light");
+          updateThemeBtn();
+        }
+      }, duration);
     }
 
-    function escHtml(s) {
-      return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    const horrorMsgs = [
+      "ERROR: Xevra.exe has stopped responding...",
+      "ฉัน... ไม่เข้าใจ... 💀",
+      "⚠ SYSTEM OVERLOAD ⚠",
+      "[ CRITICAL ERROR 0xDEAD ]",
+    ];
+
+    async function triggerHorror() {
+      const overlay = document.getElementById("glitchOverlay");
+      const card = document.querySelector(".chat-card");
+
+      // Phase 1: intense glitch
+      overlay.classList.add("active");
+      card.classList.add("glitching");
+      await sleep(1600);
+
+      // Phase 2: horror screen — dark during horror only
+      document.documentElement.classList.add("dark");
+      updateThemeBtn();
+      document.getElementById("horrorMsg").textContent =
+        horrorMsgs[Math.floor(Math.random() * horrorMsgs.length)];
+      overlay.classList.add("horror");
+      await sleep(2800);
+
+      // Phase 3: reset → back to light mode + restart intro
+      overlay.classList.remove("active", "horror");
+      card.classList.remove("glitching");
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("theme", "light");
+      updateThemeBtn();
+      messagesEl.innerHTML = '<div id="msgSpacer" style="flex:1;min-height:0;"></div>';
+      sessionStorage.removeItem("introPlayed");
+      await sleep(300);
+      runIntro();
     }
 
-    function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+    const greetingPairs = [
+      {
+        greeting: "ฮ๊ายฮาย ~ Xevra.GPT เองค่ะ ✨",
+        question:  "ยินดีต้อนรับนะคะ 🎀 วันนี้มีคำอะไรมาให้แปลงเอ่ย~",
+      },
+      {
+        greeting: "ยินดีต้อนรับกลับมานะคะ นายท่าน 😊",
+        question:  "ต้องการให้ Xevra.GPT แปลงคำอะไรให้เอ่ย ~ 🌸",
+      },
+      {
+        greeting: "วันนี้ก็มีปัญหามาอีกแล้วสินะคะ~",
+        question:  "บอกมาได้เลยนะคะ Xevra พร้อมแปลงให้ค่ะ 💫",
+      },
+    ];
+    function pickPair() { return greetingPairs[Math.floor(Math.random() * greetingPairs.length)]; }
 
-    // ── Intro animation ──
     async function runIntro() {
-      const demos = [
-        { user: "l;ylfu",    bot: "สวัสดี",   dir: "eng→thai" },
-        { user: "8iohs;d",   bot: "คร​น้วด",   dir: "eng→thai", skip: true },
-      ];
-
-      await delay(400);
-
-      // Demo 1
-      addUserBubble("l;ylfu");
-      await delay(700);
-      showTyping();
-      await delay(1100);
-      hideTyping();
-      addBotBubble("สวัสดี", "eng→thai");
-
-      await delay(1200);
-
-      // Demo 2
-      addUserBubble("epfk");
-      await delay(600);
-      showTyping();
-      await delay(900);
-      hideTyping();
-      addBotBubble("ยดาำ", "eng→thai");
-
-      await delay(1000);
-      addDivider("ลองพิมพ์ดูได้เลย");
+      triggerGlitch(500, true); // 0.5s, temp dark during glitch only
+      const pair = pickPair();
+      await addBubble("bot", pair.greeting, 500);
+      await addBubble("bot", pair.question, 1300);
+      await addDivider("✦ ตัวอย่าง demo ✦", 2100);
+      await addBubble("user", " Compatible Shortcut", 2600);
+      await showTyping(3100);
+      await new Promise(r => setTimeout(r, 1000));
+      removeTyping();
+      await addBubble("bot", "ฟังชั่นลัด ค่ะ 😊", 4100, "ENG → TH");
+      await addDivider("ส่งข้อความมาได้เลยนะคะ ↓", 4900);
     }
 
-    // ── Real convert ──
+    async function runReturnIntro() {
+      const pair = pickPair();
+      await addBubble("bot", pair.greeting, 400);
+      await addBubble("bot", pair.question, 1100);
+    }
+
+    if (!sessionStorage.getItem("introPlayed")) {
+      sessionStorage.setItem("introPlayed", "1");
+      runIntro();
+    } else {
+      runReturnIntro();
+    }
+
+    /* ── Input ── */
+    const inputBox = document.getElementById("inputBox");
+    const clearBtn = document.getElementById("clearBtn");
+    const sendBtn = document.getElementById("sendBtn");
+
+    inputBox.addEventListener("input", () => {
+      inputBox.style.height = "auto";
+      inputBox.style.height = Math.min(inputBox.scrollHeight, 120) + "px";
+      const has = inputBox.value.trim().length > 0;
+      clearBtn.style.display = has ? "block" : "none";
+      sendBtn.classList.toggle("active", has);
+    });
+
+    inputBox.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+
+    function clearInput() {
+      inputBox.value = "";
+      inputBox.style.height = "auto";
+      clearBtn.style.display = "none";
+      sendBtn.classList.remove("active");
+      inputBox.focus();
+    }
+
+    let noMatchCount = 0;
+    let sending = false;
     async function sendMessage() {
-      const ta = document.getElementById("chatInput");
-      const text = ta.value.trim();
-      if (!text) return;
+      const text = inputBox.value.trim();
+      if (!text || sending) return;
+      sending = true;
 
-      ta.value = "";
-      ta.style.height = "auto";
-
-      addUserBubble(text);
-      showTyping();
+      await addBubble("user", escHtml(text));
+      clearInput();
+      await showTyping(300);
 
       try {
         const res = await fetch("/api/convert", {
@@ -468,61 +762,40 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ text }),
         });
-        const { result, direction } = await res.json();
+        const data = await res.json();
+        await new Promise(r => setTimeout(r, 600));
+        removeTyping();
 
-        // Small delay so typing feels natural
-        await delay(400 + Math.min(text.length * 18, 600));
-        hideTyping();
-
-        if (direction === "none") {
-          addBotError("แปลงไม่ได้เลยอ่ะ ไม่มี keyboard mapping ที่รู้จัก");
+        if (data.direction === "none") {
+          noMatchCount++;
+          if (noMatchCount >= 6) {
+            noMatchCount = 0;
+            sending = false;
+            await triggerHorror();
+            return;
+          }
+          const noMatchMsgs = [
+            "Xevra ไม่เข้าใจคำถามค่ะ 💦 ลองส่งมาใหม่ได้นะคะ~",
+            "อืมม~ Xevra ไม่รู้จะแปลเป็นอะไรเลยค่ะ 💦",
+            "โอ๊ะ... Xevra ไม่เข้าใจเลยค่ะ 💦 keyboard อยู่ mode อะไรนะคะ?",
+          ];
+          await addBubble("bot", noMatchMsgs[Math.floor(Math.random() * noMatchMsgs.length)]);
         } else {
-          addBotBubble(result, direction);
+          noMatchCount = 0;
+          const badge = dirLabel[data.direction] ?? data.direction;
+          await addBubble("bot", escHtml(data.result), 0, badge);
         }
       } catch {
-        hideTyping();
-        addBotError("เกิดข้อผิดพลาด ลองใหม่นะ 😅");
+        removeTyping();
+        await addBubble("bot", "Xevra ไม่เข้าใจคำถามค่ะ 💦 ลองใหม่อีกทีนะคะ~");
       }
+
+      sending = false;
     }
 
-    function copyBubble(btn, text) {
-      navigator.clipboard.writeText(text).then(() => {
-        btn.innerHTML = CHECK_SVG;
-        setTimeout(() => { btn.innerHTML = COPY_SVG; }, 1500);
-      });
+    function escHtml(s) {
+      return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
     }
-
-    // ── Input events ──
-    const chatInput = document.getElementById("chatInput");
-
-    chatInput.addEventListener("input", () => {
-      chatInput.style.height = "auto";
-      chatInput.style.height = Math.min(chatInput.scrollHeight, 140) + "px";
-    });
-
-    chatInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        sendMessage();
-      }
-    });
-
-    // ── Theme toggle ──
-    function updateThemeBtn() {
-      const btn = document.getElementById("themeToggle");
-      const dark = document.documentElement.classList.contains("dark");
-      btn.innerHTML = dark ? SUN : MOON;
-      btn.title = dark ? "Light mode" : "Dark mode";
-    }
-
-    function toggleTheme() {
-      const dark = document.documentElement.classList.toggle("dark");
-      localStorage.setItem("theme", dark ? "dark" : "light");
-      updateThemeBtn();
-    }
-
-    updateThemeBtn();
-    runIntro();
   </script>
 </body>
 </html>

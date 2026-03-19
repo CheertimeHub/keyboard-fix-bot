@@ -116,6 +116,12 @@ http.createServer((req, res) => {
         res.end();
       }
     });
+  } else if (req.method === "GET" && req.url === "/api/bot-info") {
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({
+      avatar: client.user?.displayAvatarURL({ size: 128, extension: "png" }) ?? null,
+      name: client.user?.username ?? "Xevra.GPT",
+    }));
   } else {
     const page = req.url === "/about" ? "about.html" : req.url === "/how-to-use" ? "how-to-use.html" : "index.html";
     const file = path.join(__dirname, "public", page);
