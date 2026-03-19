@@ -691,17 +691,11 @@
     function pickPair() { return greetingPairs[Math.floor(Math.random() * greetingPairs.length)]; }
 
     async function runIntro() {
-      triggerGlitch(500, true); // 0.5s, temp dark during glitch only
+      triggerGlitch(500, true);
       const pair = pickPair();
       await addBubble("bot", pair.greeting, 500);
       await addBubble("bot", pair.question, 1300);
-      await addDivider("✦ ตัวอย่าง demo ✦", 2100);
-      await addBubble("user", " Compatible Shortcut", 2600);
-      await showTyping(3100);
-      await new Promise(r => setTimeout(r, 1000));
-      removeTyping();
-      await addBubble("bot", "ฟังชั่นลัด ค่ะ 😊", 4100, "ENG → TH");
-      await addDivider("ส่งข้อความมาได้เลยนะคะ ↓", 4900);
+      await addDivider("ส่งข้อความมาได้เลยนะคะ ↓", 2000);
     }
 
     async function runReturnIntro() {
@@ -746,11 +740,26 @@
     }
 
     let noMatchCount = 0;
+    let nameCount = 0;
     let sending = false;
     async function sendMessage() {
       const text = inputBox.value.trim();
       if (!text || sending) return;
       sending = true;
+
+      // Count how many times user calls Xevra by name
+      if (/เซฟร่า|xevra/i.test(text)) {
+        nameCount++;
+        if (nameCount >= 6) {
+          nameCount = 0;
+          noMatchCount = 0;
+          await addBubble("user", escHtml(text));
+          clearInput();
+          sending = false;
+          await triggerHorror();
+          return;
+        }
+      }
 
       await addBubble("user", escHtml(text));
       clearInput();
@@ -782,6 +791,7 @@
           await addBubble("bot", noMatchMsgs[Math.floor(Math.random() * noMatchMsgs.length)]);
         } else {
           noMatchCount = 0;
+          nameCount = 0;
           const badge = dirLabel[data.direction] ?? data.direction;
           await addBubble("bot", escHtml(data.result), 0, badge);
         }
