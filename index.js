@@ -60,11 +60,9 @@ client.on("messageCreate", async (msg) => {
   if (!msg.reference) {
     const commandResult = parseAndExecute(msg.content);
     if (commandResult) {
-      const loadingMap = { "🎲": "🎲 กำลังทอย...", "🪙": "🪙 กำลังทอย...", "🔢": "🔢 กำลังสุ่ม...", "✨": "✨ กำลังเลือก..." };
-      const loading = loadingMap[commandResult[0]] ?? "⏳ กำลังคำนวณ...";
-      const sent = await msg.reply(loading);
+      await msg.channel.sendTyping();
       await new Promise((r) => setTimeout(r, 1000));
-      await sent.edit(commandResult);
+      await msg.reply(commandResult);
     } else {
       await msg.reply("ต้อง **reply** ข้อความที่อยากแปลก่อน แล้วค่อย @ฉันนะ 👀\nหรือใช้เว็บได้เลยที่ https://xevradotgpt.onrender.com");
     }
