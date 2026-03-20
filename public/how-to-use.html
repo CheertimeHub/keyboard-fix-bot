@@ -4,7 +4,17 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>How to Use — Xevra.GPT</title>
-  <script>if((localStorage.getItem("theme")??"dark")==="dark")document.documentElement.classList.add("dark");</script>
+  <meta name="description" content="วิธีใช้งาน Xevra.GPT แก้ข้อความที่พิมพ์ผิด keyboard layout ไทย ↔ อังกฤษ">
+  <meta property="og:title" content="Xevra.GPT — How to Use">
+  <meta property="og:description" content="วิธีใช้งาน Xevra.GPT แก้ข้อความที่พิมพ์ผิด keyboard layout ไทย ↔ อังกฤษ">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Xevra.GPT — How to Use">
+  <meta name="twitter:description" content="วิธีใช้งาน Xevra.GPT บน Discord และเว็บ">
+  <meta name="theme-color" content="#963931">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%23963931'/%3E%3Ctext x='256' y='340' font-family='system-ui,sans-serif' font-size='280' font-weight='900' text-anchor='middle' fill='white'%3EX%3C/text%3E%3C/svg%3E">
+  <script>if((localStorage.getItem("theme")??"light")==="dark")document.documentElement.classList.add("dark");</script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -199,6 +209,20 @@
     html.dark .note code { background: rgba(150,57,49,0.15); color: #e8998f; }
     html.dark .tag { background: #963931; }
     html.dark .dice-vals code { background: rgba(150,57,49,0.15); color: #e8998f; }
+
+    /* ── Responsive ── */
+    @media (max-width: 600px) {
+      body { padding: 4.5rem 1rem 2rem; }
+      nav { padding: 0.65rem 1rem; }
+      .nav-link { display: none; }
+      .container { padding: 0; }
+      .tabs { gap: 0.3rem; }
+      .tab-btn { font-size: 0.78rem; padding: 0.3rem 0.6rem; }
+      .tab-content { padding: 1rem; }
+      .tab-content h2 { font-size: 1rem; }
+      .tab-content p, .tab-content li { font-size: 0.88rem; }
+      .bubble { font-size: 0.88rem; padding: 0.5rem 0.85rem; }
+    }
   </style>
 </head>
 <body>

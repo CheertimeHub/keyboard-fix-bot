@@ -4,7 +4,17 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>About — Xevra.GPT</title>
-  <script>if((localStorage.getItem("theme")??"dark")==="dark")document.documentElement.classList.add("dark");</script>
+  <meta name="description" content="แก้ข้อความที่พิมพ์ผิด keyboard layout ไทย ↔ อังกฤษ และ Caps Lock อัตโนมัติ">
+  <meta property="og:title" content="Xevra.GPT — About">
+  <meta property="og:description" content="แก้ข้อความที่พิมพ์ผิด keyboard layout ไทย ↔ อังกฤษ และ Caps Lock อัตโนมัติ">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Xevra.GPT — About">
+  <meta name="twitter:description" content="แก้ข้อความที่พิมพ์ผิด keyboard layout ไทย ↔ อังกฤษ">
+  <meta name="theme-color" content="#963931">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%23963931'/%3E%3Ctext x='256' y='340' font-family='system-ui,sans-serif' font-size='280' font-weight='900' text-anchor='middle' fill='white'%3EX%3C/text%3E%3C/svg%3E">
+  <script>if((localStorage.getItem("theme")??"light")==="dark")document.documentElement.classList.add("dark");</script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -116,6 +126,16 @@
     html.dark .content p { color: #94a3b8; }
     html.dark .tag { background: #963931; }
     html.dark .enjoy { color: #4a6080; }
+
+    /* ── Responsive ── */
+    @media (max-width: 600px) {
+      body { padding: 4.5rem 1.25rem 2rem; justify-content: flex-start; }
+      nav { padding: 0.65rem 1rem; }
+      .nav-link { display: none; }
+      .content { gap: 1rem; }
+      .content h2 { font-size: 1.1rem; }
+      .content p { font-size: 0.88rem; }
+    }
   </style>
 </head>
 <body>

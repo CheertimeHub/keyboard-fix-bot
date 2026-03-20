@@ -3,7 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Xevra.GPT — แก้ keyboard layout</title>
+  <title>Xevra.GPT</title>
+  <meta name="description" content="แก้ข้อความที่พิมพ์ผิด keyboard layout ไทย ↔ อังกฤษ และ Caps Lock อัตโนมัติ">
+  <meta property="og:title" content="Xevra.GPT">
+  <meta property="og:description" content="แก้ข้อความที่พิมพ์ผิด keyboard layout ไทย ↔ อังกฤษ และ Caps Lock อัตโนมัติ">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Xevra.GPT">
+  <meta name="twitter:description" content="แก้ข้อความที่พิมพ์ผิด keyboard layout ไทย ↔ อังกฤษ">
+  <meta name="theme-color" content="#963931">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23963931'/%3E%3Ctext x='16' y='24' font-family='system-ui' font-size='20' font-weight='900' text-anchor='middle' fill='white'%3EX%3C/text%3E%3C/svg%3E">
   <script>if((localStorage.getItem("theme")??"light")==="dark")document.documentElement.classList.add("dark");</script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -107,6 +117,19 @@
         border-radius: 16px 16px 0 0;
         box-shadow: none;
       }
+      /* ซ่อน nav text links บนมือถือ */
+      .nav-link { display: none; }
+      nav { padding: 0.65rem 1rem; }
+      /* bubble เล็กลงบนมือถือ */
+      .bubble { font-size: 1rem; padding: 0.65rem 1rem; }
+      .bubble-avatar { width: 36px; height: 36px; }
+      .input-area { padding: 0.65rem 0.85rem 0.75rem; }
+      .direction-label { font-size: 0.75rem; }
+      .copied-label { font-size: 0.68rem; }
+    }
+    @media (max-width: 380px) {
+      .bubble { font-size: 0.92rem; padding: 0.55rem 0.85rem; }
+      .bubble-avatar { width: 30px; height: 30px; }
     }
 
     /* Bubble row */
@@ -185,15 +208,37 @@
       border-bottom-color: #963931;
     }
 
-    /* Direction label — below bubble */
+    /* Direction label + copy button — below bubble */
+    .bubble-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      margin-top: 0.3rem;
+      padding: 0 0.25rem;
+    }
     .direction-label {
       font-size: 0.9rem;
       color: #999;
-      margin-top: 0.3rem;
-      padding: 0 0.25rem;
       letter-spacing: 0.01em;
     }
     .bubble-row.user .direction-label { color: rgba(255,255,255,0.55); }
+
+    /* Bot bubble clickable to copy */
+    .bubble-row.bot .bubble { cursor: pointer; }
+    .bubble-row.bot .bubble:active { opacity: 0.8; }
+
+    /* LINE-style "คัดลอกแล้ว" label — appears to the right of bubble */
+    .copied-label {
+      font-size: 0.72rem;
+      color: #aaa;
+      align-self: flex-end;
+      white-space: nowrap;
+      padding-bottom: 2px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.18s;
+    }
+    .copied-label.show { opacity: 1; }
 
     /* Divider */
     .divider {
@@ -227,6 +272,9 @@
       0%, 80%, 100% { transform: translateY(0); }
       40% { transform: translateY(-5px); }
     }
+
+    /* Clear chat button (hidden for now) */
+    .chat-clear-btn { display: none; }
 
     /* Input area */
     .input-area {
@@ -333,6 +381,7 @@
     html.dark .clear-btn:hover { color: #94a3b8; }
     html.dark .divider { color: #4a5568; }
     html.dark .direction-label { color: rgba(255,255,255,0.35); }
+    html.dark .copied-label { color: #4a5568; }
 
     /* ── Glitch Overlay ── */
     #glitchOverlay {
@@ -400,10 +449,10 @@
                transparent 91%); }
     }
 
-    /* Intro-only: hide bands during horror */
+    /* Intro-only bands — hidden during horror */
     #glitchOverlay.horror .glitch-bands { display: none; }
 
-    /* Old-style horror layers — hidden normally, shown during horror */
+    /* Horror-only layers — calm, no harsh flash */
     .scanlines, .rgb-r, .rgb-b { display: none; }
     #glitchOverlay.horror .scanlines,
     #glitchOverlay.horror .rgb-r,
@@ -412,30 +461,32 @@
     .scanlines {
       position: absolute; inset: 0;
       background: repeating-linear-gradient(
-        0deg, transparent, transparent 2px,
-        rgba(180,0,0,0.18) 2px, rgba(180,0,0,0.18) 4px
+        0deg, transparent, transparent 3px,
+        rgba(150,0,0,0.12) 3px, rgba(150,0,0,0.12) 4px
       );
-      animation: scanMove 6s linear infinite;
+      animation: scanMove 4s linear infinite;
     }
-    @keyframes scanMove { to { background-position-y: 80px; } }
+    @keyframes scanMove { to { background-position-y: 60px; } }
+
     .rgb-r {
       position: absolute; inset: 0;
-      background: rgba(255, 0, 0, 0.1);
+      background: rgba(200, 0, 0, 0.07);
       mix-blend-mode: screen;
-      animation: rgbShift 0.08s steps(1) infinite;
+      animation: rgbDrift 0.15s steps(1) infinite;
     }
     .rgb-b {
       position: absolute; inset: 0;
-      background: rgba(100, 0, 0, 0.07);
+      background: rgba(80, 0, 0, 0.05);
       mix-blend-mode: screen;
-      animation: rgbShift 0.11s steps(1) infinite reverse;
+      animation: rgbDrift 0.22s steps(1) infinite reverse;
     }
-    @keyframes rgbShift {
+    @keyframes rgbDrift {
       0%   { transform: translateX(0); }
-      33%  { transform: translateX(5px) scaleY(1.01); }
-      66%  { transform: translateX(-5px); }
-      100% { transform: translateX(2px); }
+      33%  { transform: translateX(3px); }
+      66%  { transform: translateX(-3px); }
+      100% { transform: translateX(1px); }
     }
+
     @keyframes cardGlitch {
       0%,100% { transform: none; filter: none; }
       10%  { transform: translateX(-5px) skewX(-1.5deg); filter: brightness(1.15); }
@@ -448,7 +499,7 @@
 
     /* Horror mode */
     #glitchOverlay.horror {
-      background: rgba(4, 0, 0, 0.92);
+      background: rgba(4, 0, 0, 0.88);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -496,6 +547,9 @@
 
     <!-- Input -->
     <div class="input-area">
+      <button class="chat-clear-btn" onclick="clearChat()" title="ล้างแชท">
+        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+      </button>
       <div class="input-wrap">
         <textarea id="inputBox" rows="1" placeholder="พิมพ์ข้อความที่อยากแปล..."></textarea>
         <button class="clear-btn" id="clearBtn" onclick="clearInput()">✕</button>
@@ -556,19 +610,22 @@
         setTimeout(() => {
           const row = document.createElement("div");
           row.className = `bubble-row ${who}`;
-          const labelHtml = badge ? `<div class="direction-label">${badge}</div>` : "";
+          const labelHtml = badge ? `<span class="direction-label">${badge}</span>` : "";
           if (who === "bot") {
             row.innerHTML = `
               <div class="bubble-avatar is-bot">${getBotAvatarInner()}</div>
               <div class="bubble-wrap">
                 <div class="bubble">${text}</div>
-                ${labelHtml}
-              </div>`;
+                ${badge ? `<div class="bubble-meta">${labelHtml}</div>` : ""}
+              </div>
+              <span class="copied-label">คัดลอกแล้ว</span>`;
+            // attach copy via addEventListener to avoid quote-escaping issues
+            row.querySelector(".bubble").addEventListener("click", () => copyBubble(row, text));
           } else {
             row.innerHTML = `
               <div class="bubble-wrap">
                 <div class="bubble">${text}</div>
-                ${labelHtml}
+                ${badge ? `<div class="bubble-meta">${labelHtml}</div>` : ""}
               </div>`;
           }
           messagesEl.appendChild(row);
@@ -702,6 +759,7 @@
       const pair = pickPair();
       await addBubble("bot", pair.greeting, 400);
       await addBubble("bot", pair.question, 1100);
+      await addDivider("ส่งข้อความมาได้เลยนะคะ ↓", 1700);
     }
 
     if (!sessionStorage.getItem("introPlayed")) {
@@ -750,15 +808,28 @@
       // Count how many times user calls Xevra by name
       if (/เซฟร่า|xevra/i.test(text)) {
         nameCount++;
+        await addBubble("user", escHtml(text));
+        clearInput();
         if (nameCount >= 6) {
           nameCount = 0;
           noMatchCount = 0;
-          await addBubble("user", escHtml(text));
-          clearInput();
           sending = false;
           await triggerHorror();
           return;
         }
+        const nameReplies = [
+          "ค๊า~",
+          "คะ ? 👀",
+          "มีอะไรให้ช่วยบอกได้เลยนะคะ 🌸",
+          "เอ่ ... มีอะไรรึเปล่าเอ่ย ?",
+          "...",
+        ];
+        await showTyping(300);
+        await sleep(600);
+        removeTyping();
+        await addBubble("bot", nameReplies[Math.min(nameCount - 1, nameReplies.length - 1)]);
+        sending = false;
+        return;
       }
 
       await addBubble("user", escHtml(text));
@@ -805,6 +876,26 @@
 
     function escHtml(s) {
       return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    }
+
+    function copyBubble(bubbleEl, html) {
+      const plain = html.replace(/&amp;/g,"&").replace(/&lt;/g,"<").replace(/&gt;/g,">");
+      navigator.clipboard.writeText(plain).then(() => {
+        const label = bubbleEl.closest(".bubble-row")?.querySelector(".copied-label");
+        if (!label) return;
+        label.classList.add("show");
+        setTimeout(() => label.classList.remove("show"), 1800);
+      }).catch(() => {});
+    }
+
+    function clearChat() {
+      if (sending) return;
+      messagesEl.innerHTML = '<div id="msgSpacer" style="flex:1;min-height:0;"></div>';
+      noMatchCount = 0;
+      nameCount = 0;
+      sessionStorage.removeItem("introPlayed");
+      sessionStorage.setItem("introPlayed", "1");
+      runIntro();
     }
   </script>
 </body>

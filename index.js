@@ -122,6 +122,13 @@ http.createServer((req, res) => {
       avatar: client.user?.displayAvatarURL({ size: 128, extension: "png" }) ?? null,
       name: client.user?.username ?? "Xevra.GPT",
     }));
+  } else if (req.method === "GET" && req.url === "/manifest.json") {
+    const file = path.join(__dirname, "public", "manifest.json");
+    fs.readFile(file, (err, data) => {
+      if (err) { res.writeHead(404); res.end(); return; }
+      res.writeHead(200, { "Content-Type": "application/manifest+json" });
+      res.end(data);
+    });
   } else {
     const page = req.url === "/about" ? "about.html" : req.url === "/how-to-use" ? "how-to-use.html" : "index.html";
     const file = path.join(__dirname, "public", page);
