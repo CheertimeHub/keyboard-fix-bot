@@ -413,10 +413,10 @@
     <!-- Choose -->
     <div class="tab-panel" id="tab-choose">
       <p class="panel-title">✨ เลือกให้</p>
-      <p class="panel-desc">ให้ Xevra.GPT ช่วยเลือกเมื่อตัดสินใจไม่ได้ ใส่กี่ตัวเลือกก็ได้</p>
+      <p class="panel-desc">ให้ Xevra.GPT ช่วยเลือกเมื่อตัดสินใจไม่ได้ ใส่กี่ตัวเลือกก็ได้ พิมพ์แบบธรรมชาติก็รู้เรื่อง</p>
 
       <div class="examples">
-        <div class="example-label">ตัวอย่าง</div>
+        <div class="example-label">บอกตรงๆ ว่าเลือก</div>
 
         <div class="example">
           <div class="msg msg-user"><span class="msg-label label-user">User</span> @Xevra.GPT เลือกให้หน่อย ข้าวผัด หรือ ราดหน้า</div>
@@ -425,19 +425,44 @@
         </div>
 
         <div class="example">
+          <div class="msg msg-user"><span class="msg-label label-user">User</span> @Xevra.GPT เลือก ข้าว และ ก๋วยเตี๋ยว และ ราดหน้า และ ผัดไท</div>
+          <hr class="divider">
+          <div class="msg msg-bot"><span class="msg-label label-bot">Xevra</span> ✨ โอเค~ งั้น... เลือก <strong>ผัดไท</strong> นะคะ<br><span style="font-size:0.82em;color:#888">(จาก ข้าว, ก๋วยเตี๋ยว, ราดหน้า, ผัดไท)</span></div>
+        </div>
+
+        <div class="example-label" style="margin-top:0.5rem">ใช้คำว่า "ระหว่าง"</div>
+
+        <div class="example">
           <div class="msg msg-user"><span class="msg-label label-user">User</span> @Xevra.GPT ช่วยเลือกระหว่าง A, B, C ให้หน่อย</div>
           <hr class="divider">
           <div class="msg msg-bot"><span class="msg-label label-bot">Xevra</span> ✨ อืมม~ เลือก <strong>B</strong> นะคะ<br><span style="font-size:0.82em;color:#888">(จาก A, B, C)</span></div>
         </div>
 
         <div class="example">
-          <div class="msg msg-user"><span class="msg-label label-user">User</span> @Xevra.GPT เลือก ข้าว และ ก๋วยเตี๋ยว และ ราดหน้า และ ผัดไท</div>
+          <div class="msg msg-user"><span class="msg-label label-user">User</span> @Xevra.GPT อันไหนอร่อยกว่ากันระหว่าง ตี๋น้อย ลักกี้สุกี้</div>
           <hr class="divider">
-          <div class="msg msg-bot"><span class="msg-label label-bot">Xevra</span> ✨ โอเค~ งั้น... เลือก <strong>ผัดไท</strong> นะคะ<br><span style="font-size:0.82em;color:#888">(จาก ข้าว, ก๋วยเตี๋ยว, ราดหน้า, ผัดไท)</span></div>
+          <div class="msg msg-bot"><span class="msg-label label-bot">Xevra</span> ✨ เซฟร่าว่า... เลือก <strong>ลักกี้สุกี้</strong> นะคะ<br><span style="font-size:0.82em;color:#888">(จาก ตี๋น้อย, ลักกี้สุกี้)</span></div>
+        </div>
+
+        <div class="example-label" style="margin-top:0.5rem">ถามแบบธรรมชาติ</div>
+
+        <div class="example">
+          <div class="msg msg-user"><span class="msg-label label-user">User</span> @Xevra.GPT อันไหนอร่อย ตี๋น้อย หรือ ลักกี้สุกี้</div>
+          <hr class="divider">
+          <div class="msg msg-bot"><span class="msg-label label-bot">Xevra</span> ✨ อืมม~ เลือก <strong>ตี๋น้อย</strong> นะคะ<br><span style="font-size:0.82em;color:#888">(จาก ตี๋น้อย, ลักกี้สุกี้)</span></div>
+        </div>
+
+        <div class="example">
+          <div class="msg msg-user"><span class="msg-label label-user">User</span> @Xevra.GPT เที่ยวไหนดีอะ ดิสนี่แลนด์ โตเกียว</div>
+          <hr class="divider">
+          <div class="msg msg-bot"><span class="msg-label label-bot">Xevra</span> ✨ โอเค~ งั้น... เลือก <strong>โตเกียว</strong> นะคะ<br><span style="font-size:0.82em;color:#888">(จาก ดิสนี่แลนด์, โตเกียว)</span></div>
         </div>
       </div>
 
-      <div class="note">ใช้ "หรือ" / "กับ" / "และ" / "," ในการคั่นตัวเลือก — ใส่กี่ตัวเลือกก็ได้</div>
+      <div class="note">
+        คั่นตัวเลือกด้วย "หรือ" / "กับ" / "และ" / "," หรือเว้นวรรคก็ได้<br>
+        ทริกเกอร์ที่รู้จัก: <code>เลือก</code> · <code>ระหว่าง</code> · <code>ใครดี</code> · <code>ไหนดี</code> · <code>อะไรดี</code> · <code>ไหน/ใคร/อะไร + หรือ</code>
+      </div>
     </div>
 
     <!-- Coin -->
