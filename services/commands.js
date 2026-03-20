@@ -236,21 +236,59 @@ function executeRandom(text) {
 // Choose
 // ---------------------------------------------------------------------------
 
-function executeChoose(text) {
-  if (!/เลือก/.test(text)) return null;
+// คำที่ไม่นับเป็น option (filler words ภาษาไทย)
+const OPTION_FILLERS = new Set([
+  "อะ","นะ","อ่ะ","ดี","หน่อย","เลย","ไหม","ด้วย","จ้า","ครับ","ค่ะ","นะคะ","นะครับ","ก็ได้","อยาก","ว่า"
+]);
 
-  let content = text.replace(/^.*?เลือก\s*(?:ให้(?:หน่อย)?|หน่อย|ระหว่าง|จาก|ว่า)?\s*/s, "");
-  const fillerSuffix = /\s*(?:ให้(?:หน่อย)?|หน่อย|ด้วย|นะ|จ้า|ครับ|ค่ะ|นะคะ|นะครับ|ก็ได้|อ่ะ|อะ)\s*$/;
-  const options = content
-    .split(/\s*(?:หรือ(?:ว่า)?|กับ|และ|,|\/|\|)\s*/)
-    .map((s) => s.replace(fillerSuffix, "").trim())
-    .filter((s) => s.length > 0);
+function cleanOptions(raw) {
+  return raw
+    .split(/\s+/)
+    .map(s => s.trim())
+    .filter(s => s.length >= 2 && !OPTION_FILLERS.has(s));
+}
 
+function formatChooseResult(options) {
   if (options.length < 2) return null;
   const choice = options[Math.floor(Math.random() * options.length)];
   const xevraSays = ["เซฟร่าว่า...", "อืมม~", "โอเค~ งั้น...", "เอ่อ... งั้นก็..."];
   const prefix = xevraSays[Math.floor(Math.random() * xevraSays.length)];
   return `✨ ${prefix} เลือก **${choice}** นะคะ\n(จาก ${options.join(", ")})`;
+}
+
+function executeChoose(text) {
+  const fillerSuffix = /\s*(?:ให้(?:หน่อย)?|หน่อย|ด้วย|นะ|จ้า|ครับ|ค่ะ|นะคะ|นะครับ|ก็ได้|อ่ะ|อะ)\s*$/;
+
+  // ── Pattern 1: มี "เลือก" (เดิม + separator หรือ/กับ/และ/,) ──
+  if (/เลือก/.test(text)) {
+    let content = text.replace(/^.*?เลือก\s*(?:ให้(?:หน่อย)?|หน่อย|ระหว่าง|จาก|ว่า)?\s*/s, "");
+    const options = content
+      .split(/\s*(?:หรือ(?:ว่า)?|กับ|และ|,|\/|\|)\s*/)
+      .map(s => s.replace(fillerSuffix, "").trim())
+      .filter(s => s.length > 0);
+    if (options.length >= 2) return formatChooseResult(options);
+    // ถ้า separator ไม่เจอ → ลอง space-split
+    const spaceSplit = cleanOptions(content.replace(fillerSuffix, ""));
+    return formatChooseResult(spaceSplit);
+  }
+
+  // ── Pattern 2: "ใครดี / ไหนดี / อะไรดี" ──
+  if (/(?:ใคร|ไหน|อะไร)ดี/.test(text)) {
+    // ถ้ามี "ระหว่าง" → ตัด anchor แล้ว space-split
+    const betweenMatch = text.match(/ระหว่าง\s+(.+)$/);
+    if (betweenMatch) {
+      const options = cleanOptions(betweenMatch[1].replace(fillerSuffix, ""));
+      return formatChooseResult(options);
+    }
+    // ไม่มี "ระหว่าง" → เอาส่วนหลัง "ดี[อะ/นะ/อ่ะ/ ]" มา space-split
+    const afterDee = text.match(/(?:ใคร|ไหน|อะไร)ดี(?:อะ|นะ|อ่ะ|ไหม)?\s+(.+)$/);
+    if (afterDee) {
+      const options = cleanOptions(afterDee[1].replace(fillerSuffix, ""));
+      return formatChooseResult(options);
+    }
+  }
+
+  return null;
 }
 
 // ---------------------------------------------------------------------------
