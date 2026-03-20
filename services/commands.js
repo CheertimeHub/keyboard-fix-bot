@@ -245,7 +245,7 @@ function cleanOptions(raw) {
   return raw
     .split(/\s+/)
     .map(s => s.trim())
-    .filter(s => s.length >= 2 && !OPTION_FILLERS.has(s));
+    .filter(s => s.length >= 1 && !OPTION_FILLERS.has(s));
 }
 
 function formatChooseResult(options) {
@@ -259,28 +259,43 @@ function formatChooseResult(options) {
 function executeChoose(text) {
   const fillerSuffix = /\s*(?:ให้(?:หน่อย)?|หน่อย|ด้วย|นะ|จ้า|ครับ|ค่ะ|นะคะ|นะครับ|ก็ได้|อ่ะ|อะ)\s*$/;
 
-  // ── Pattern 1: มี "เลือก" (เดิม + separator หรือ/กับ/และ/,) ──
-  if (/เลือก/.test(text)) {
-    let content = text.replace(/^.*?เลือก\s*(?:ให้(?:หน่อย)?|หน่อย|ระหว่าง|จาก|ว่า)?\s*/s, "");
-    const options = content
-      .split(/\s*(?:หรือ(?:ว่า)?|กับ|และ|,|\/|\|)\s*/)
+  const splitBySep = (str) =>
+    str.split(/\s*(?:หรือ(?:ว่า)?|กับ|และ|,|\/|\|)\s*/)
       .map(s => s.replace(fillerSuffix, "").trim())
       .filter(s => s.length > 0);
+
+  // ── Pattern 1: มี "เลือก" ──
+  if (/เลือก/.test(text)) {
+    let content = text.replace(/^.*?เลือก\s*(?:ให้(?:หน่อย)?|หน่อย|ระหว่าง|จาก|ว่า)?\s*/s, "");
+    const options = splitBySep(content);
     if (options.length >= 2) return formatChooseResult(options);
     // ถ้า separator ไม่เจอ → ลอง space-split
     const spaceSplit = cleanOptions(content.replace(fillerSuffix, ""));
     return formatChooseResult(spaceSplit);
   }
 
-  // ── Pattern 2: "ใครดี / ไหนดี / อะไรดี" ──
+  // ── Pattern 2: มี "ระหว่าง" → ดึง options หลังคำนี้เลย ──
+  const betweenMatch = text.match(/ระหว่าง\s+(.+)$/);
+  if (betweenMatch) {
+    const content = betweenMatch[1].replace(fillerSuffix, "");
+    const sepOptions = splitBySep(content);
+    if (sepOptions.length >= 2) return formatChooseResult(sepOptions);
+    const options = cleanOptions(content);
+    return formatChooseResult(options);
+  }
+
+  // ── Pattern 3: "ใคร/ไหน/อะไร" + "หรือ" separator ──
+  if (/(?:ใคร|ไหน|อะไร)/.test(text) && /หรือ/.test(text)) {
+    const parts = text.split(/\s*หรือ(?:ว่า)?\s*/);
+    // ตัด question prefix ออกจาก segment แรก
+    const firstOpt = parts[0].replace(/^.*?(?:ใคร|ไหน|อะไร)\S*\s+/, "").replace(fillerSuffix, "").trim();
+    const restOpts = parts.slice(1).map(s => s.replace(fillerSuffix, "").trim()).filter(s => s.length > 0);
+    const allOpts = [firstOpt, ...restOpts].filter(s => s.length > 0);
+    if (allOpts.length >= 2) return formatChooseResult(allOpts);
+  }
+
+  // ── Pattern 4: "ใครดี / ไหนดี / อะไรดี" + space-split ──
   if (/(?:ใคร|ไหน|อะไร)ดี/.test(text)) {
-    // ถ้ามี "ระหว่าง" → ตัด anchor แล้ว space-split
-    const betweenMatch = text.match(/ระหว่าง\s+(.+)$/);
-    if (betweenMatch) {
-      const options = cleanOptions(betweenMatch[1].replace(fillerSuffix, ""));
-      return formatChooseResult(options);
-    }
-    // ไม่มี "ระหว่าง" → เอาส่วนหลัง "ดี[อะ/นะ/อ่ะ/ ]" มา space-split
     const afterDee = text.match(/(?:ใคร|ไหน|อะไร)ดี(?:อะ|นะ|อ่ะ|ไหม)?\s+(.+)$/);
     if (afterDee) {
       const options = cleanOptions(afterDee[1].replace(fillerSuffix, ""));
