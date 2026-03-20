@@ -1,5 +1,5 @@
 require("dotenv").config();
-const { Client, GatewayIntentBits } = require("discord.js");
+const { Client, GatewayIntentBits, Partials } = require("discord.js");
 const { detectAndConvert } = require("./services/keyboard");
 const { parseAndExecute } = require("./services/commands");
 
@@ -18,7 +18,9 @@ const client = new Client({
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
+    GatewayIntentBits.GuildMessageReactions,
   ],
+  partials: [Partials.Message, Partials.Reaction, Partials.Channel],
 });
 
 // Monitor connection state
@@ -70,6 +72,7 @@ client.on("messageCreate", async (msg) => {
   }
 
   try {
+    await msg.channel.sendTyping();
     // ดึงข้อความต้นฉบับ
     const originalMsg = await msg.channel.messages.fetch(msg.reference.messageId);
     const originalText = originalMsg.content.trim();
@@ -90,6 +93,29 @@ client.on("messageCreate", async (msg) => {
   } catch (err) {
     console.error("❌ Error:", err);
     await msg.reply("เกิดข้อผิดพลาดบางอย่าง ลองใหม่นะ 😅");
+  }
+});
+
+// 👁️‍🗨️ react to translate
+const EYE_EMOJI = ["👁️‍🗨️", "👁‍🗨"];
+client.on("messageReactionAdd", async (reaction, user) => {
+  if (user.bot) return;
+  if (!EYE_EMOJI.includes(reaction.emoji.name)) return;
+
+  try {
+    if (reaction.partial) await reaction.fetch();
+    if (reaction.message.partial) await reaction.message.fetch();
+
+    const originalText = reaction.message.content?.trim();
+    if (!originalText) return;
+
+    await reaction.message.channel.sendTyping();
+    const { result, direction } = detectAndConvert(originalText);
+    if (direction === "none") return;
+
+    await reaction.message.reply(`\`\`\`\n: ${result}\n\`\`\``);
+  } catch (err) {
+    console.error("❌ Reaction translate error:", err);
   }
 });
 

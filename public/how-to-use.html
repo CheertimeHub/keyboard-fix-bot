@@ -348,13 +348,31 @@
           <hr class="divider">
           <div class="msg msg-bot"><span class="msg-label label-bot">Xevra</span> 🎲 [4, 2, 6] = <strong>12</strong> (3d6)</div>
         </div>
+        <div class="example">
+          <div class="msg msg-user"><span class="msg-label label-user">User</span> @Xevra.GPT ทอยให้หน่อย</div>
+          <hr class="divider">
+          <div class="msg msg-bot"><span class="msg-label label-bot">Xevra</span> 🎲 <strong>4</strong> (d6)</div>
+        </div>
+
+        <div class="example-label" style="margin-top:0.5rem">ตั้งชื่อการทอย</div>
+        <div class="example">
+          <div class="msg msg-user"><span class="msg-label label-user">User</span> @Xevra.GPT ทอย attack 2d6+3</div>
+          <hr class="divider">
+          <div class="msg msg-bot"><span class="msg-label label-bot">Xevra</span> 🎲 <strong>attack</strong>: [5, 3] + 3 = <strong>11</strong> (2d6+3)</div>
+        </div>
+        <div class="example">
+          <div class="msg msg-user"><span class="msg-label label-user">User</span> @Xevra.GPT ทอย โจมตี d20</div>
+          <hr class="divider">
+          <div class="msg msg-bot"><span class="msg-label label-bot">Xevra</span> 🎲 <strong>โจมตี</strong>: <strong>17</strong> (d20)</div>
+        </div>
       </div>
 
       <div class="note">
         <strong>Syntax:</strong> <code>[N#][M]dS[+/-mod][kh/kl/dh/dl N][&lt;/&gt;/&lt;=/&gt;= N]</code><br><br>
         <strong>N#</strong> = ทอยซ้ำ N ครั้ง &nbsp;|&nbsp; <strong>MdS</strong> = M ลูก S หน้า<br>
         <strong>kh/kl</strong> = keep highest/lowest &nbsp;|&nbsp; <strong>dh/dl</strong> = drop highest/lowest<br>
-        <strong>&lt;5 &gt;10 &gt;=15</strong> = threshold สำเร็จ/ล้มเหลว
+        <strong>&lt;5 &gt;10 &gt;=15</strong> = threshold สำเร็จ/ล้มเหลว<br><br>
+        💬 ใส่ "ช่วย" / "ขอ" นำหน้า หรือ "ให้หน่อย" / "ครับ" ท้ายได้เลย
       </div>
     </div>
 
@@ -383,13 +401,19 @@
           <hr class="divider">
           <div class="msg msg-bot"><span class="msg-label label-bot">Xevra</span> 🔢 สุ่ม 1-10: <strong>7</strong></div>
         </div>
+
+        <div class="example">
+          <div class="msg msg-user"><span class="msg-label label-user">User</span> @Xevra.GPT สุ่มหน่อย</div>
+          <hr class="divider">
+          <div class="msg msg-bot"><span class="msg-label label-bot">Xevra</span> 🔢 สุ่ม 1-100: <strong>63</strong></div>
+        </div>
       </div>
     </div>
 
     <!-- Choose -->
     <div class="tab-panel" id="tab-choose">
       <p class="panel-title">✨ เลือกให้</p>
-      <p class="panel-desc">ให้ Xevra.GPT ช่วยเลือกเมื่อตัดสินใจไม่ได้ คั่นตัวเลือกด้วย "หรือ" หรือ ","</p>
+      <p class="panel-desc">ให้ Xevra.GPT ช่วยเลือกเมื่อตัดสินใจไม่ได้ ใส่กี่ตัวเลือกก็ได้</p>
 
       <div class="examples">
         <div class="example-label">ตัวอย่าง</div>
@@ -397,17 +421,23 @@
         <div class="example">
           <div class="msg msg-user"><span class="msg-label label-user">User</span> @Xevra.GPT เลือกให้หน่อย ข้าวผัด หรือ ราดหน้า</div>
           <hr class="divider">
-          <div class="msg msg-bot"><span class="msg-label label-bot">Xevra</span> ✨ เลือก <strong>ราดหน้า</strong> (จาก ข้าวผัด, ราดหน้า)</div>
+          <div class="msg msg-bot"><span class="msg-label label-bot">Xevra</span> ✨ เซฟร่าว่า... เลือก <strong>ราดหน้า</strong> นะคะ<br><span style="font-size:0.82em;color:#888">(จาก ข้าวผัด, ราดหน้า)</span></div>
         </div>
 
         <div class="example">
           <div class="msg msg-user"><span class="msg-label label-user">User</span> @Xevra.GPT ช่วยเลือกระหว่าง A, B, C ให้หน่อย</div>
           <hr class="divider">
-          <div class="msg msg-bot"><span class="msg-label label-bot">Xevra</span> ✨ เลือก <strong>B</strong> (จาก A, B, C)</div>
+          <div class="msg msg-bot"><span class="msg-label label-bot">Xevra</span> ✨ อืมม~ เลือก <strong>B</strong> นะคะ<br><span style="font-size:0.82em;color:#888">(จาก A, B, C)</span></div>
+        </div>
+
+        <div class="example">
+          <div class="msg msg-user"><span class="msg-label label-user">User</span> @Xevra.GPT เลือก ข้าว และ ก๋วยเตี๋ยว และ ราดหน้า และ ผัดไท</div>
+          <hr class="divider">
+          <div class="msg msg-bot"><span class="msg-label label-bot">Xevra</span> ✨ โอเค~ งั้น... เลือก <strong>ผัดไท</strong> นะคะ<br><span style="font-size:0.82em;color:#888">(จาก ข้าว, ก๋วยเตี๋ยว, ราดหน้า, ผัดไท)</span></div>
         </div>
       </div>
 
-      <div class="note">ใช้ "หรือ" / "กับ" / "," ในการคั่นตัวเลือก — ใส่กี่ตัวเลือกก็ได้</div>
+      <div class="note">ใช้ "หรือ" / "กับ" / "และ" / "," ในการคั่นตัวเลือก — ใส่กี่ตัวเลือกก็ได้</div>
     </div>
 
     <!-- Coin -->
@@ -425,9 +455,15 @@
         </div>
 
         <div class="example">
-          <div class="msg msg-user"><span class="msg-label label-user">User</span> @Xevra.GPT สุ่มเหรียญหัวก้อย</div>
+          <div class="msg msg-user"><span class="msg-label label-user">User</span> @Xevra.GPT โยนเหรียญ</div>
           <hr class="divider">
           <div class="msg msg-bot"><span class="msg-label label-bot">Xevra</span> 🪙 <strong>ก้อย</strong></div>
+        </div>
+
+        <div class="example">
+          <div class="msg msg-user"><span class="msg-label label-user">User</span> @Xevra.GPT หัวก้อย</div>
+          <hr class="divider">
+          <div class="msg msg-bot"><span class="msg-label label-bot">Xevra</span> 🪙 <strong>หัว</strong></div>
         </div>
       </div>
     </div>

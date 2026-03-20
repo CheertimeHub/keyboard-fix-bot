@@ -170,13 +170,19 @@ function findDiceNotation(text) {
 }
 
 function executeDice(text) {
+  // Labeled roll: "ทอย attack 2d6+3" or "ทอย โจมตี d20"
+  const labelMatch = text.match(/ทอย\s+([ก-๛a-zA-Z][ก-๛a-zA-Z0-9]*)\s+((?:\d+#)?(?:\d+)?d\d+\S*)/i);
+  if (labelMatch) {
+    const result = executeDiceExpr(labelMatch[2]);
+    if (result) return result.replace("🎲 ", `🎲 **${labelMatch[1]}**: `);
+  }
+
   // Try notation first
   const notation = findDiceNotation(text);
   if (notation) return executeDiceExpr(notation);
 
   // Thai keyword fallback
   if (!/ทอย|เต๋า/.test(text)) return null;
-  if (!/ทอยเต๋า/.test(text) && !/\d/.test(text)) return null;
 
   const full = text.match(/(\d+)\s*(?:ลูก|ตัว|อัน).*?(\d+)\s*(?:หน้า|แต้ม)/);
   if (full) return executeDiceExpr(`${full[1]}d${full[2]}`);
@@ -195,8 +201,8 @@ function executeDice(text) {
 // ---------------------------------------------------------------------------
 
 function executeCoin(text) {
-  if (!/เหรียญ/.test(text)) return null;
-  if (!/ทอย|สุ่ม|หัวก้อย/.test(text)) return null;
+  const hasAction = /ทอย|สุ่ม|โยน/.test(text);
+  if (!/หัวก้อย/.test(text) && !(/เหรียญ/.test(text) && hasAction)) return null;
   return Math.random() < 0.5 ? "🪙 **หัว**" : "🪙 **ก้อย**";
 }
 
@@ -222,7 +228,7 @@ function executeRandom(text) {
     return `🔢 สุ่ม 1-${max}: **${Math.floor(Math.random() * max) + 1}**`;
   }
 
-  if (!/สุ่มเลข|สุ่มให้|สุ่มตัวเลข/.test(text)) return null;
+  if (!/สุ่มเลข|สุ่มให้|สุ่มตัวเลข|สุ่มหน่อย/.test(text)) return null;
   return `🔢 สุ่ม 1-100: **${Math.floor(Math.random() * 100) + 1}**`;
 }
 
@@ -236,13 +242,26 @@ function executeChoose(text) {
   let content = text.replace(/^.*?เลือก\s*(?:ให้(?:หน่อย)?|หน่อย|ระหว่าง|จาก|ว่า)?\s*/s, "");
   const fillerSuffix = /\s*(?:ให้(?:หน่อย)?|หน่อย|ด้วย|นะ|จ้า|ครับ|ค่ะ|นะคะ|นะครับ|ก็ได้|อ่ะ|อะ)\s*$/;
   const options = content
-    .split(/\s*(?:หรือ(?:ว่า)?|กับ|,|\/|\|)\s*/)
+    .split(/\s*(?:หรือ(?:ว่า)?|กับ|และ|,|\/|\|)\s*/)
     .map((s) => s.replace(fillerSuffix, "").trim())
     .filter((s) => s.length > 0);
 
   if (options.length < 2) return null;
   const choice = options[Math.floor(Math.random() * options.length)];
-  return `✨ เลือก **${choice}** (จาก ${options.join(", ")})`;
+  const xevraSays = ["เซฟร่าว่า...", "อืมม~", "โอเค~ งั้น...", "เอ่อ... งั้นก็..."];
+  const prefix = xevraSays[Math.floor(Math.random() * xevraSays.length)];
+  return `✨ ${prefix} เลือก **${choice}** นะคะ\n(จาก ${options.join(", ")})`;
+}
+
+// ---------------------------------------------------------------------------
+// Filler stripper — ลบ prefix/suffix ฟุ่มเฟือยก่อน dispatch
+// ---------------------------------------------------------------------------
+
+function stripFillers(text) {
+  return text
+    .replace(/^(?:ช่วย|ขอ|ลอง|อยาก)\s*/u, "")
+    .replace(/\s*(?:ให้หน่อย|ให้ที|ให้ด้วย|ด้วยนะ|หน่อยนะ|นะคะ|นะครับ|ครับ|ค่ะ|จ้า)\s*$/u, "")
+    .trim();
 }
 
 // ---------------------------------------------------------------------------
@@ -250,7 +269,9 @@ function executeChoose(text) {
 // ---------------------------------------------------------------------------
 
 function parseAndExecute(rawText) {
-  const text = rawText.replace(/<@!?\d+>/g, "").replace(/@\S+/g, "").trim();
+  const text = stripFillers(
+    rawText.replace(/<@!?\d+>/g, "").replace(/@\S+/g, "").trim()
+  );
 
   return (
     executeCoin(text) ??
