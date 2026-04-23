@@ -153,8 +153,23 @@ http.createServer((req, res) => {
       res.writeHead(200, { "Content-Type": "application/manifest+json" });
       res.end(data);
     });
+  } else if (req.method === "GET" && req.url.startsWith("/assets/")) {
+    const assetPath = decodeURIComponent(req.url.replace(/\?.*$/, "")); // strip query string + decode spaces
+    const file = path.join(__dirname, "public", assetPath);
+    fs.readFile(file, (err, data) => {
+      if (err) { res.writeHead(404); res.end(); return; }
+      const ext = path.extname(file).toLowerCase();
+      const mime = { ".png": "image/png", ".jpg": "image/jpeg", ".webp": "image/webp", ".gif": "image/gif", ".svg": "image/svg+xml" }[ext] || "application/octet-stream";
+      res.writeHead(200, { "Content-Type": mime, "Cache-Control": "public, max-age=86400" });
+      res.end(data);
+    });
   } else {
-    const page = req.url === "/about" ? "about.html" : req.url === "/how-to-use" ? "how-to-use.html" : "index.html";
+    const page = req.url === "/about" ? "about.html"
+               : req.url === "/how-to-use" ? "how-to-use.html"
+               : req.url === "/community" ? "community.html"
+               : req.url === "/community/rnc" ? "community/rnc.html"
+               : req.url === "/community/rnc/create" ? "community/rnc/create.html"
+               : "index.html";
     const file = path.join(__dirname, "public", page);
     fs.readFile(file, (err, data) => {
       if (err) { res.writeHead(404); res.end(); return; }

@@ -17,24 +17,35 @@ cp .env.example .env   # ใส่ BOT_TOKEN ใน .env
 npm start
 ```
 
+ต้องใช้ Node.js 20.x ตาม `engines` ใน `package.json`
+
 ## Architecture
 
 ### Entry Point: `index.js`
-- สร้าง Discord client ด้วย intents: `Guilds`, `GuildMessages`, `MessageContent`
-- Bot respond เมื่อถูก @mention:
-  - **มี reply**: ดึงข้อความต้นฉบับ → เรียก `detectAndConvert()` → ส่งผลกลับเป็น code block
-  - **ไม่มี reply**: เรียก `parseAndExecute()` ก่อน — ถ้าเป็น command (ทอยเต๋า/สุ่ม/เลือก) จะตอบกลับ ถ้าไม่ใช่ จะแนะนำให้ reply
-- รัน HTTP server คู่กันบน `process.env.PORT || 3000` สำหรับ web UI
+
+Bot สร้าง Discord client ด้วย intents: `Guilds`, `GuildMessages`, `MessageContent`, `GuildMessageReactions` และ Partials: `Message`, `Reaction`, `Channel` (จำเป็นสำหรับ reaction บนข้อความเก่า)
+
+Bot ตอบสนองใน 2 ทาง:
+
+**@mention:**
+- **มี reply**: ดึงข้อความต้นฉบับ → `detectAndConvert()` → ส่งผลเป็น code block ตอบกลับข้อความต้นฉบับ
+- **ไม่มี reply**: ลอง `parseAndExecute()` — ถ้าเป็น command (ทอยเต๋า/สุ่ม/เลือก) จะตอบกลับ ถ้าไม่ใช่ จะแนะนำให้ reply
+
+**👁️‍🗨️ emoji reaction** (ไม่ต้อง @mention):
+- React ด้วย `👁️‍🗨️` บนข้อความไหนก็ได้ → bot แปลงข้อความนั้นทันที
+- ใช้ Partials เพราะ reaction บน uncached message ต้องการ `reaction.fetch()` ก่อน
+
+Web server รันคู่กันบน `process.env.PORT || 3000`
 
 ### Core Logic: `services/keyboard.js`
 
 **Maps:**
-- `engToThai`: ASCII → Thai (Kedmanee layout), ครอบคลุมทั้ง unshifted, shifted, และ symbol keys
-- `thaiToEng`: สร้างจาก `engToThai` แบบ reverse อัตโนมัติ
+- `engToThai`: ASCII → Thai (Kedmanee layout) ครอบคลุม unshifted, shifted, และ symbol keys
+- `thaiToEng`: สร้างจาก `engToThai` แบบ reverse อัตโนมัติ (บาง Thai char ชนกันถ้า ASCII หลายตัว map ไปตัวเดียว)
 - `capsToNormal`: Thai caps-lock char → Thai normal char (Windows Kedmanee layer 3)
 
 **ฟังก์ชันหลัก:**
-- `isMostlyThai(text)`: ถ้า >50% ของ non-whitespace chars อยู่ใน U+0E00-U+0E7F → Thai
+- `isMostlyThai(text)`: ถ้า >50% ของ non-whitespace chars อยู่ใน U+0E00–U+0E7F → Thai
 - `detectAndConvert(text)`: entry point — ถ้า Thai → `fixCapsLock()`, ถ้า ASCII → นับ engToThai vs thaiToEng hits แล้วเลือก direction
 - `fixCapsLock(text)`: แก้ caps-lock token-by-token (split by spaces) — แปลงเฉพาะ token ที่มี caps chars เกิน 50%
 - `resolveByDict(text)`: ใช้ Thai dictionary (`thaiWords.json`) แก้ความคลุมเครือของ ็/้ และ ์/ื/ี หลัง caps-fix
@@ -42,32 +53,38 @@ npm start
 **Dictionary disambiguation (`services/thaiWords.json`):**
 - มี 4 sets: `maiTaiku` (คำที่มี ็), `karan` (คำที่มี ์), `maiTho` (คำที่มี ้), `maiIi` (คำที่มี ี)
 - ใช้ sliding window (±6 chars) หา Thai substring ที่ match dictionary ก่อนตัดสินว่าจะแทนหรือไม่
+- Logic: replace ้→็ เฉพาะเมื่อ substring+็ อยู่ใน maiTaikuSet AND substring+้ ไม่อยู่ใน maiThoSet (guard ป้องกัน false positive)
 
 ### Commands: `services/commands.js`
 
 Bot รองรับ commands ที่ใช้ @mention โดยตรง (ไม่ต้อง reply):
 
 - **ทอยเต๋า**: รองรับ RPG dice notation `[N#][M]dS[+/-mod][kh/kl/dh/dl N][op N]`
-  - ตัวอย่าง: `ทอย 2d6+3`, `ทอย 4d6kh3`, `ทอย 3#d20>=15`
+  - ตัวอย่าง: `ทอย 2d6+3`, `ทอย 4d6kh3`, `ทอย 3#d20>=15`, `ทอย โจมตี d20`
   - fallback Thai keywords: "ทอยเต๋า 6 หน้า", "ทอย 3 ลูก"
-- **เหรียญ**: "ทอยเหรียญ" → หัว/ก้อย
+- **เหรียญ**: "ทอยเหรียญ" / "หัวก้อย" → หัว/ก้อย
 - **สุ่มเลข**: "สุ่ม 1-100", "สุ่ม 50"
-- **เลือก**: "เลือก A หรือ B หรือ C"
+- **เลือก**: "เลือก A หรือ B หรือ C", "ระหว่าง A กับ B", "อะไรดี X Y Z"
 
-`parseAndExecute(rawText)` strips mentions แล้วลอง `executeCoin → executeDice → executeRandom → executeChoose` ตามลำดับ
+`parseAndExecute(rawText)` strips mentions + filler words แล้วลอง `executeCoin → executeDice → executeRandom → executeChoose` ตามลำดับ
 
 ### Web Server (ใน `index.js`)
-- `GET /` → `public/index.html`
-- `GET /about` → `public/about.html`
-- `GET /how-to-use` → `public/how-to-use.html`
-- `POST /api/convert` → รับ `{ text }`, ส่งคืน `{ result, direction }`
+
+| Route | Description |
+|---|---|
+| `GET /` | `public/index.html` |
+| `GET /about` | `public/about.html` |
+| `GET /how-to-use` | `public/how-to-use.html` |
+| `GET /manifest.json` | PWA manifest จาก `public/manifest.json` |
+| `GET /api/bot-info` | ส่งคืน `{ avatar, name }` ของ bot |
+| `POST /api/convert` | รับ `{ text }`, ส่งคืน `{ result, direction }` |
 
 ## Environment Variables
 
-| Variable    | Description              |
-|-------------|--------------------------|
-| `BOT_TOKEN` | Discord bot token        |
-| `PORT`      | HTTP server port (default: 3000) |
+| Variable | Description |
+|---|---|
+| `BOT_TOKEN` | Discord bot token |
+| `PORT` | HTTP server port (default: 3000) |
 
 ## Deployment
 

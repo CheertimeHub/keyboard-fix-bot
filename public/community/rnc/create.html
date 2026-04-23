@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>สร้างการ์ดตัวละคร — RNC</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Press+Start+2P&family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #08080f;
+      --surface:   rgba(255,255,255,0.038);
+      --gold:      #c9a96e;
+      --gold-l:    #e8cf9a;
+      --gold-d:    #8a6830;
+      --gold-glow: rgba(201,169,110,0.14);
+      --retro-phosphor:     #c9a96e;
+      --retro-phosphor-dim: #8a6830;
+      --retro-panel:        rgba(6,16,10,0.94);
+      --retro-bezel:        #a7b39b;
+      --retro-bezel-shadow: #495341;
+      --text:      #e8e0d0;
+      --text-dim:  rgba(232,224,208,0.42);
+      --border:    rgba(201,169,110,0.2);
+    }
+
+    html, body { height: 100%; background: var(--bg); color: var(--text); overflow: hidden; }
+
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      opacity: 0.03; pointer-events: none; z-index: 0;
+    }
+    body::after {
+      content: ''; position: fixed; inset: 0;
+      background: radial-gradient(ellipse 70% 45% at 50% 28%, rgba(100,70,20,0.11) 0%, transparent 70%);
+      pointer-events: none; z-index: 0;
+    }
+
+    /* ── Nav ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+      height: 52px; padding: 0 1.5rem;
+      display: flex; align-items: center; justify-content: space-between;
+      background: rgba(8,8,15,0.84); border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(14px);
+    }
+    .nav-brand { font-family: 'Cinzel', serif; font-size: 0.92rem; letter-spacing: 0.22em; color: var(--gold); }
+    .nav-back {
+      display: flex; align-items: center; gap: 0.4rem;
+      color: var(--text-dim); text-decoration: none; font-size: 0.8rem;
+      padding: 0.3rem 0.7rem; border: 1px solid transparent; border-radius: 5px;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .nav-back:hover { color: var(--text); border-color: var(--border); }
+
+    /* ── Shared deco ── */
+    .deco-divider { display: flex; align-items: center; gap: 0.6rem; }
+    .deco-divider::before, .deco-divider::after {
+      content: ''; flex: 1; height: 1px;
+      background: linear-gradient(to right, transparent, var(--gold-d), var(--gold), var(--gold-d), transparent);
+    }
+    .deco-diamond    { width: 5px; height: 5px; background: var(--gold); transform: rotate(45deg); flex-shrink: 0; }
+    .deco-diamond-lg { width: 9px; height: 9px; background: transparent; border: 1.5px solid var(--gold); transform: rotate(45deg); flex-shrink: 0; }
+
+    .corner { position: absolute; border-color: var(--gold); border-style: solid; }
+    .corner-tl { top: 7px; left: 7px;   border-width: 1.5px 0 0 1.5px; }
+    .corner-tr { top: 7px; right: 7px;  border-width: 1.5px 1.5px 0 0; }
+    .corner-bl { bottom: 7px; left: 7px;  border-width: 0 0 1.5px 1.5px; }
+    .corner-br { bottom: 7px; right: 7px; border-width: 0 1.5px 1.5px 0; }
+
+    /* ════════════════════════════════════════
+       WIZARD
+    ════════════════════════════════════════ */
+    #wizard {
+      position: fixed; top: 52px; left: 0; right: 0; bottom: 0;
+      z-index: 60;
+      background:
+        radial-gradient(circle at top, rgba(140,255,159,0.06), transparent 30%),
+        linear-gradient(180deg, #0a0f0b 0%, #050705 100%);
+      display: none; flex-direction: column; align-items: center;
+      overflow-y: auto;
+      padding: 0.85rem 0;
+    }
+    #wizard.active { display: flex; }
+    #wizard::before {
+      content: '';
+      position: fixed;
+      inset: 52px 0 0;
+      pointer-events: none;
+      background:
+        repeating-linear-gradient(180deg, rgba(255,255,255,0.05) 0, rgba(255,255,255,0.05) 1px, transparent 1px, transparent 4px),
+        radial-gradient(circle at 50% 35%, rgba(140,255,159,0.08), transparent 48%);
+      opacity: 0.22;
+      mix-blend-mode: screen;
+      z-index: 0;
+    }
+    .wiz-inner {
+      width: min(760px, calc(100vw - 28px));
+      height: min(860px, calc(100vh - 86px));
+      padding: 0.95rem 1.1rem 1.35rem;
+      display: flex; flex-direction: column;
+      flex: 0 0 auto; min-height: 0;
+      position: relative;
+      z-index: 1;
+    }
+    .wiz-inner::before {
+      content: '';
+      position: absolute;
+      inset: 0.5rem 0.1rem 0.95rem;
+      border: 3px solid var(--retro-bezel-shadow);
+      background:
+        linear-gradient(145deg, #cfd8c7 0%, var(--retro-bezel) 16%, #7f8a75 35%, #65705e 100%);
+      box-shadow:
+        0 0 0 2px rgba(235,240,227,0.34) inset,
+        0 24px 38px rgba(0,0,0,0.36);
+      border-radius: 0;
+      pointer-events: none;
+    }
+    .wiz-inner::after {
+      content: '';
+      position: absolute;
+      inset: 1.2rem 0.8rem 1.6rem;
+      background:
+        radial-gradient(circle at 50% 30%, rgba(140,255,159,0.06), transparent 44%),
+        linear-gradient(180deg, rgba(4,12,7,0.98), rgba(3,10,5,0.96));
+      border: 2px solid rgba(112,130,108,0.9);
+      box-shadow:
+        0 0 0 2px rgba(10,16,11,0.95) inset,
+        0 0 24px rgba(0,0,0,0.32) inset;
+      border-radius: 0;
+      pointer-events: none;
+    }
+
+    .wiz-topbar {
+      width: 100%; flex-shrink: 0; padding: 1.65rem 1.45rem 0.55rem;
+      display: flex; align-items: center; justify-content: space-between;
+      position: relative; z-index: 1;
+    }
+    .wiz-community-label, .wiz-step-label {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 0.62rem;
+      letter-spacing: 0.12em;
+      color: var(--retro-phosphor);
+      text-transform: uppercase;
+      text-shadow: 0 0 8px rgba(140,255,159,0.24);
+    }
+    .wiz-step-label { color: var(--retro-phosphor-dim); }
+    .wiz-progress {
+      width: calc(100% - 3.3rem); height: 12px; background: rgba(12,26,16,0.95);
+      flex-shrink: 0; overflow: hidden; border-radius: 0; margin: 0 1.45rem 0.7rem;
+      border: 1px solid rgba(140,255,159,0.28);
+      box-shadow: 0 0 0 2px rgba(4,9,5,0.72) inset;
+      position: relative; z-index: 1;
+    }
+    .wiz-progress-fill {
+      height: 100%;
+      background:
+        repeating-linear-gradient(90deg, rgba(0,0,0,0.22) 0 7px, transparent 7px 14px),
+        linear-gradient(90deg, #2d8d3e, var(--retro-phosphor));
+      border-radius: 0;
+      transition: width 0.45s ease;
+      box-shadow: 0 0 12px rgba(140,255,159,0.22);
+    }
+
+    /* ── Chat row: avatar LEFT + bubble RIGHT ── */
+    .wiz-chat-row {
+      display: flex; align-items: flex-start; gap: 0.75rem;
+      flex: 1; width: 100%; min-height: 0;
+    }
+    .wiz-avatar-wrap {
+      flex-shrink: 0;
+      display: flex; flex-direction: column; align-items: center;
+      gap: 0.36rem; padding-top: 0.45rem;
+      position: relative; z-index: 1;
+    }
+    .wiz-avatar-frame {
+      position: relative; width: 108px; height: 132px;
+      background:
+        linear-gradient(180deg, rgba(140,255,159,0.05), rgba(10,18,12,0.12)),
+        #07110a;
+      border: 2px solid rgba(140,255,159,0.26);
+      display: flex; align-items: center; justify-content: center; overflow: hidden;
+      transition: border-color 0.4s, box-shadow 0.4s, transform 0.4s;
+      image-rendering: pixelated;
+      box-shadow:
+        0 0 0 2px rgba(7,15,9,0.95),
+        0 0 0 4px rgba(140,255,159,0.06),
+        0 8px 24px rgba(0,0,0,0.35);
+    }
+    .wiz-avatar-frame::before {
+      content: ''; position: absolute; inset: 0;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.1), transparent 32%),
+        repeating-linear-gradient(180deg, rgba(0,0,0,0.22) 0 2px, transparent 2px 4px);
+      mix-blend-mode: screen; opacity: 0.16; pointer-events: none;
+    }
+    .wiz-avatar-frame::after { content: ''; position: absolute; inset: 5px; border: 1px solid rgba(140,255,159,0.14); pointer-events: none; }
+    .wiz-avatar-frame .corner { width: 7px; height: 7px; }
+    .wiz-avatar-frame .corner-tl { top: 2px; left: 2px;   border-width: 1.5px 0 0 1.5px; }
+    .wiz-avatar-frame .corner-tr { top: 2px; right: 2px;  border-width: 1.5px 1.5px 0 0; }
+    .wiz-avatar-frame .corner-bl { bottom: 2px; left: 2px;  border-width: 0 0 1.5px 1.5px; }
+    .wiz-avatar-frame .corner-br { bottom: 2px; right: 2px; border-width: 0 1.5px 1.5px 0; }
+    .wiz-avatar-frame img { width: 100%; height: 100%; object-fit: cover; object-position: center top; display: block; filter: saturate(0.96) contrast(1.04) brightness(1); }
+    .wiz-avatar-frame.talking {
+      border-color: rgba(140,255,159,0.68);
+      box-shadow:
+        0 0 0 2px rgba(7,15,9,0.95),
+        0 0 0 4px rgba(140,255,159,0.1),
+        0 0 24px rgba(140,255,159,0.22),
+        0 0 8px rgba(140,255,159,0.08) inset;
+      animation: avatarPulse 0.85s steps(2, end) infinite;
+    }
+    @keyframes avatarPulse {
+      from { transform: translateY(0); }
+      to   { transform: translateY(-2px); }
+    }
+    .wiz-wave {
+      display: flex; align-items: flex-end; gap: 2.5px;
+      height: 13px; opacity: 0; transition: opacity 0.22s;
+      position: relative; z-index: 1;
+    }
+    .wiz-wave.talking { opacity: 1; }
+    .wiz-wave span { width: 2.5px; border-radius: 2px; background: linear-gradient(to top, #3fa44f, var(--retro-phosphor)); }
+    .wiz-wave.talking span { animation: wBar 0.7s steps(2, end) infinite alternate; }
+    .wiz-wave span:nth-child(1) { height: 4px;  animation-delay: 0s; }
+    .wiz-wave span:nth-child(2) { height: 9px;  animation-delay: 0.12s; }
+    .wiz-wave span:nth-child(3) { height: 13px; animation-delay: 0.06s; }
+    .wiz-wave span:nth-child(4) { height: 8px;  animation-delay: 0.18s; }
+    .wiz-wave span:nth-child(5) { height: 4px;  animation-delay: 0.09s; }
+    @keyframes wBar { from { transform: scaleY(0.3); opacity: 0.5; } to { transform: scaleY(1); opacity: 1; } }
+    .wiz-avatar-name {
+      font-family: 'Press Start 2P', monospace; font-size: 0.5rem;
+      letter-spacing: 0.16em; color: var(--retro-phosphor);
+      text-transform: uppercase; text-shadow: 0 0 8px rgba(140,255,159,0.18);
+      position: relative; z-index: 1;
+    }
+
+    /* ── Chat bubble ── */
+    .wiz-bubble {
+      position: relative; flex: 1; min-width: 0;
+      background: rgba(201,169,110,0.038);
+      border: 1px solid rgba(201,169,110,0.22);
+      padding: 0.9rem 1rem 0.8rem;
+    }
+    .wiz-bubble::before {
+      content: ''; position: absolute;
+      left: -8px; top: 16px;
+      width: 0; height: 0;
+      border-top: 7px solid transparent;
+      border-bottom: 7px solid transparent;
+      border-right: 8px solid rgba(201,169,110,0.22);
+    }
+    .wiz-bubble::after {
+      content: ''; position: absolute;
+      left: -6px; top: 17px;
+      width: 0; height: 0;
+      border-top: 6px solid transparent;
+      border-bottom: 6px solid transparent;
+      border-right: 7px solid rgba(14,14,22,1);
+    }
+    .wiz-bubble-sep {
+      width: 100%; height: 1px; margin: 0.55rem 0;
+      background: linear-gradient(to right, rgba(201,169,110,0.28), rgba(201,169,110,0.06));
+    }
+
+    .wiz-q-area {
+      flex: 1; display: flex; flex-direction: column; align-items: stretch; gap: 0.85rem;
+      padding: 0 1.45rem 1rem; min-width: 0; position: relative;
+      z-index: 1; overflow-y: auto; overflow-x: hidden;
+    }
+    .wiz-q-area::before {
+      content: ''; position: absolute; inset: 0 0 0.2rem;
+      border: 1px solid rgba(140,255,159,0.18);
+      background:
+        linear-gradient(180deg, rgba(140,255,159,0.03), transparent 18%),
+        rgba(5,14,8,0.7);
+      box-shadow: 0 0 0 1px rgba(140,255,159,0.05) inset;
+      pointer-events: none;
+    }
+    .wiz-q-area.q-out-fwd  { animation: qOutFwd  0.22s cubic-bezier(0.4,0,1,1) forwards; }
+    .wiz-q-area.q-out-back { animation: qOutBack 0.22s cubic-bezier(0.4,0,1,1) forwards; }
+    .wiz-q-area.q-in-fwd   { animation: qInFwd   0.32s cubic-bezier(0,0,0.2,1) forwards; }
+    .wiz-q-area.q-in-back  { animation: qInBack  0.32s cubic-bezier(0,0,0.2,1) forwards; }
+    @keyframes qOutFwd  { to   { opacity: 0; transform: translateX(-32px); } }
+    @keyframes qOutBack { to   { opacity: 0; transform: translateX(32px);  } }
+    @keyframes qInFwd   { from { opacity: 0; transform: translateX(36px);  } to { opacity: 1; transform: translateX(0); } }
+    @keyframes qInBack  { from { opacity: 0; transform: translateX(-36px); } to { opacity: 1; transform: translateX(0); } }
+
+    .wiz-speech {
+      position: relative; z-index: 1; padding: 0.65rem 0 0;
+      font-family: 'Chakra Petch', 'Press Start 2P', monospace;
+      font-size: 0.9rem; color: var(--retro-phosphor-dim);
+      text-align: center; min-height: 1.4em;
+      text-shadow: 0 0 10px rgba(140,255,159,0.1); line-height: 1.55;
+    }
+    .wiz-question-text {
+      position: relative; z-index: 1;
+      font-family: 'Chakra Petch', 'Press Start 2P', monospace;
+      font-size: clamp(1.12rem, 1.7vw, 1.45rem); font-weight: 600;
+      letter-spacing: 0.04em; color: #cbffd3; text-align: left;
+      line-height: 1.38; min-height: 2.8em;
+      text-shadow: 0 0 14px rgba(140,255,159,0.09);
+      padding: 0 0.9rem 0 1.2rem;
+    }
+    .wiz-question-text::before {
+      content: '> ';
+      color: var(--retro-phosphor);
+      font-family: 'Press Start 2P', monospace;
+    }
+    .wiz-cursor {
+      position: relative; z-index: 1;
+      display: block; text-align: center;
+      font-size: 0.78rem; color: var(--retro-phosphor); opacity: 0;
+      margin: 0.1rem 0 0.2rem; letter-spacing: 0;
+      pointer-events: none; user-select: none;
+    }
+    .wiz-cursor.active { animation: cursorBlink 0.85s step-start infinite; }
+    @keyframes cursorBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+    .wiz-input-zone {
+      position: relative; z-index: 1;
+      width: 100%; max-width: none; display: flex; flex-direction: column;
+      gap: 0.7rem; transition: opacity 0.28s ease;
+      padding: 0 0.15rem 0.25rem;
+    }
+
+    .wiz-text-input, .wiz-textarea {
+      width: 100%; padding: 0.95rem 1rem; background: var(--retro-panel);
+      border: 2px solid rgba(140,255,159,0.28); color: #d8ffde;
+      font-family: 'Chakra Petch', 'Press Start 2P', monospace; font-size: 0.98rem; line-height: 1.4;
+      border-radius: 0; outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+      box-shadow: 4px 4px 0 rgba(8,30,14,0.92);
+    }
+    .wiz-text-input:focus, .wiz-textarea:focus {
+      border-color: rgba(140,255,159,0.7);
+      box-shadow: 4px 4px 0 rgba(8,30,14,0.92), 0 0 18px rgba(140,255,159,0.12);
+      transform: translate(-1px, -1px);
+    }
+    .wiz-text-input::placeholder, .wiz-textarea::placeholder { color: rgba(140,255,159,0.36); }
+    .wiz-textarea { resize: vertical; min-height: 132px; }
+
+    .wiz-btn-row { display: flex; justify-content: space-between; align-items: center; }
+    .wiz-back-btn, .wiz-next-btn, .wiz-choice {
+      border-radius: 0;
+      font-family: 'Chakra Petch', 'Press Start 2P', monospace;
+      font-size: 0.82rem; font-weight: 600; line-height: 1.6;
+      text-transform: uppercase;
+      box-shadow: 4px 4px 0 rgba(8,30,14,0.92);
+    }
+    .wiz-back-btn {
+      padding: 0.7rem 0.9rem; background: rgba(8,17,10,0.95);
+      border: 2px solid rgba(140,255,159,0.22); color: rgba(203,255,211,0.8);
+      cursor: pointer; transition: color 0.18s, border-color 0.18s, transform 0.18s;
+    }
+    .wiz-back-btn:hover { color: var(--text); border-color: rgba(140,255,159,0.5); transform: translate(-1px, -1px); }
+    .wiz-next-btn {
+      padding: 0.86rem 1.2rem;
+      background: linear-gradient(180deg, #b8ffc1, #4ca75c);
+      color: #071009; border: 2px solid rgba(18,63,24,0.96);
+      cursor: pointer; transition: filter 0.18s, transform 0.18s;
+    }
+    .wiz-next-btn:hover { filter: brightness(1.06); transform: translate(-1px, -1px); }
+
+    .wiz-choices { display: flex; flex-wrap: wrap; gap: 0.45rem; justify-content: center; }
+    .wiz-choice {
+      padding: 0.8rem 1rem; background: rgba(8,17,10,0.95);
+      border: 2px solid rgba(140,255,159,0.22); color: var(--text);
+      cursor: pointer; transition: background 0.16s, border-color 0.16s, color 0.16s, transform 0.16s;
+    }
+    .wiz-choice:hover { background: rgba(140,255,159,0.1); border-color: rgba(140,255,159,0.48); color: #cbffd3; transform: translate(-1px, -1px); }
+
+    .wiz-arcana-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; width: 100%; align-items: stretch; }
+    .wiz-arcana-card {
+      display: flex; flex-direction: column; align-items: center; gap: 0.45rem;
+      padding: 0.72rem 0.35rem; background: rgba(8,17,10,0.95);
+      border: 2px solid rgba(140,255,159,0.2); border-radius: 0; cursor: pointer;
+      transition: background 0.18s, border-color 0.18s, transform 0.15s;
+      box-shadow: 4px 4px 0 rgba(8,30,14,0.92);
+      overflow: hidden; min-height: 108px;
+    }
+    .wiz-arcana-card:hover { transform: translate(-1px, -1px); border-color: rgba(140,255,159,0.5); background: rgba(140,255,159,0.08); }
+    .wiz-arcana-emoji {
+      width: 40px; height: 40px; max-width: 100%; object-fit: contain;
+      display: block; image-rendering: auto;
+      filter: drop-shadow(0 0 8px rgba(140,255,159,0.08)); flex: 0 0 auto;
+    }
+    .wiz-arcana-name {
+      font-family: 'Chakra Petch', 'Press Start 2P', monospace;
+      font-size: 0.68rem; letter-spacing: 0.08em; color: rgba(140,255,159,0.58);
+      text-transform: uppercase; text-align: center; line-height: 1.35; word-break: break-word;
+    }
+
+    .wiz-stars-row { display: flex; gap: 0.4rem; justify-content: center; cursor: default; }
+    .wiz-star {
+      font-size: 1.8rem; line-height: 1; color: rgba(140,255,159,0.18);
+      cursor: pointer; transition: color 0.12s, transform 0.1s, text-shadow 0.12s; user-select: none;
+    }
+    .wiz-star.lit { color: var(--retro-phosphor); text-shadow: 0 0 12px rgba(140,255,159,0.24); }
+    .wiz-star:hover { transform: scale(1.15); }
+
+    /* ════════════════════════════════════════
+       CARD VIEW
+    ════════════════════════════════════════ */
+    #card-view {
+      position: fixed; top: 52px; left: 0; right: 0; bottom: 0;
+      z-index: 60; background: #08080f;
+      display: none; flex-direction: column; align-items: center;
+      overflow-y: auto; padding: 1rem;
+    }
+    #card-view.active { display: flex; }
+    .card-view-inner {
+      margin: auto;
+      display: flex; flex-direction: column; align-items: center;
+      gap: 1.25rem; width: 100%; padding: 0.5rem 0;
+    }
+    .card-view-eyebrow { font-family: 'Cinzel', serif; font-size: 0.7rem; letter-spacing: 0.4em; color: var(--text-dim); text-transform: uppercase; }
+    #card-scroll-wrapper { width: 100%; overflow-x: auto; display: flex; justify-content: center; }
+
+    .char-sheet { display: flex; width: min(820px, 100%); border: 1px solid rgba(201,169,110,0.35); overflow: hidden; font-family: -apple-system, "Segoe UI", sans-serif; }
+    .sheet-left { width: 230px; flex-shrink: 0; background: #0f1c17; padding: 1.1rem 0.9rem; display: flex; flex-direction: column; align-items: center; gap: 0.6rem; border-right: 1px solid rgba(201,169,110,0.18); }
+    .sheet-arcana-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.4rem; width: 100%; }
+    .sheet-arcana-item { display: flex; flex-direction: column; align-items: center; gap: 0.18rem; padding: 0.35rem 0.2rem; border: 1px solid rgba(255,255,255,0.07); border-radius: 3px; opacity: 0.32; }
+    .sheet-arcana-item.active { opacity: 1; border-color: rgba(201,169,110,0.45); background: rgba(201,169,110,0.07); }
+    .sheet-arcana-emoji { width: 30px; height: 30px; object-fit: contain; display: block; image-rendering: auto; }
+    .sheet-arcana-label { font-size: 0.45rem; letter-spacing: 0.07em; color: rgba(232,224,208,0.45); text-transform: uppercase; }
+    .sheet-stars { color: #d4a847; font-size: 0.78rem; letter-spacing: 0.08em; }
+    .sheet-name { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 1.15rem; font-weight: 600; color: #d4a847; text-align: center; }
+    .sheet-era { font-size: 0.62rem; color: rgba(212,168,71,0.65); text-align: center; }
+    .sheet-stats { width: 100%; background: rgba(0,0,0,0.18); border: 1px solid rgba(201,169,110,0.12); padding: 0.45rem 0.6rem; }
+    .sheet-stats-total { font-size: 0.66rem; color: var(--gold); letter-spacing: 0.08em; margin-bottom: 0.35rem; }
+    .sheet-stat-row { display: flex; justify-content: space-between; padding: 0.14rem 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .sheet-stat-row:last-child { border-bottom: none; }
+    .sheet-stat-label { font-size: 0.65rem; font-weight: 700; color: #c9a96e; letter-spacing: 0.08em; }
+    .sheet-stat-val   { font-size: 0.65rem; color: #e0ddd0; }
+    .editable-stat { cursor: text; border-bottom: 1px dashed rgba(201,169,110,0.15); transition: color 0.15s, border-color 0.15s; }
+    .editable-stat:hover { color: var(--gold); border-color: rgba(201,169,110,0.4); }
+    .editable-stat input { width: 38px; background: transparent; border: none; border-bottom: 1px solid rgba(201,169,110,0.55); color: #e0ddd0; font-size: 0.65rem; text-align: right; outline: none; font-family: inherit; }
+
+    .sheet-center { flex: 1; background: #090910; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 1rem 0.75rem; border-right: 1px solid rgba(201,169,110,0.18); }
+    .sheet-portrait-area { flex: 1; width: 100%; display: flex; align-items: center; justify-content: center; border: 1px dashed rgba(201,169,110,0.18); background: rgba(255,255,255,0.015); color: rgba(201,169,110,0.22); font-size: 0.68rem; text-align: center; line-height: 1.7; min-height: 200px; overflow: hidden; }
+    .sheet-portrait-area img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .sheet-center-deco { flex-shrink: 0; padding-top: 0.5rem; font-size: 1.3rem; color: rgba(201,169,110,0.16); line-height: 1; text-align: center; }
+
+    .sheet-right { width: 230px; flex-shrink: 0; background: #0c1118; display: flex; flex-direction: column; }
+    .sheet-right-top { flex: 1; padding: 0.9rem; border-bottom: 1px solid rgba(201,169,110,0.12); display: flex; flex-direction: column; gap: 0.5rem; }
+    .sheet-medium-header { display: flex; justify-content: space-between; }
+    .sheet-medium-label { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.12em; color: #e0ddd0; }
+    .sheet-medium-rank  { font-size: 0.58rem; color: rgba(201,169,110,0.42); }
+    .sheet-medium-type  { font-size: 0.68rem; color: #c9a96e; font-style: italic; }
+    .sheet-ability-box  { background: rgba(0,0,0,0.22); border: 1px solid rgba(201,169,110,0.1); padding: 0.5rem 0.6rem; flex: 1; font-size: 0.68rem; color: #b5b2a5; line-height: 1.6; min-height: 70px; }
+    .sheet-right-bottom { background: #d5d2c2; padding: 0.7rem 0.85rem; }
+    .sheet-portrait-title { font-size: 0.75rem; font-weight: 700; color: #1a1a1a; letter-spacing: 0.1em; margin-bottom: 0.45rem; text-align: center; }
+    .sheet-info-row { display: flex; justify-content: space-between; padding: 0.16rem 0; border-bottom: 1px solid rgba(0,0,0,0.07); font-size: 0.62rem; }
+    .sheet-info-row:last-child { border-bottom: none; }
+    .sheet-info-label { color: #2a2a2a; font-weight: 600; }
+    .sheet-info-val   { color: #383838; }
+    .sheet-pos-badge  { background: #eae7d5; border: 1px solid #b8b096; padding: 0.08rem 0.4rem; border-radius: 2px; font-size: 0.58rem; color: #1a1a1a; }
+
+    .portrait-upload-hint { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.4rem; padding: 0.5rem; cursor: pointer; width: 100%; height: 100%; }
+    .portrait-upload-hint input[type=file] { display: none; }
+
+    .card-actions { display: flex; gap: 0.75rem; margin-top: 1.5rem; flex-wrap: wrap; justify-content: center; }
+    .card-btn { padding: 0.58rem 1.3rem; font-family: inherit; font-size: 0.8rem; letter-spacing: 0.08em; border-radius: 4px; cursor: pointer; transition: opacity 0.18s, transform 0.15s; }
+    .card-btn:hover { opacity: 0.8; transform: translateY(-1px); }
+    .card-btn-primary { background: linear-gradient(135deg, var(--gold-d), var(--gold)); color: var(--bg); border: none; font-weight: 700; }
+    .card-btn-ghost   { background: transparent; color: var(--text-dim); border: 1px solid var(--border); }
+    .card-btn-ghost:hover { color: var(--text); border-color: rgba(201,169,110,0.38); }
+
+    @media (max-width: 480px) {
+      .wiz-inner { padding: 0.9rem 0.85rem 1.55rem; }
+      .wiz-inner::before { inset: 0.35rem 0 0.7rem; }
+      .wiz-inner::after { inset: 0.95rem 0.55rem 1.2rem; }
+      .wiz-topbar { padding: 1.65rem 1.1rem 0.7rem; }
+      .wiz-progress { width: calc(100% - 2.2rem); margin: 0 1.1rem 0.8rem; }
+      .wiz-community-label, .wiz-step-label { font-size: 0.52rem; }
+      .wiz-avatar-frame { width: 92px; height: 112px; }
+      .wiz-q-area { padding: 0 1.1rem 1rem; }
+      .wiz-question-text { font-size: 1.02rem; line-height: 1.5; min-height: 4em; padding: 0 0.35rem 0 0.7rem; }
+      .wiz-speech { font-size: 0.78rem; }
+      .wiz-arcana-grid { gap: 0.4rem; }
+      .wiz-arcana-card { min-height: 96px; padding: 0.62rem 0.25rem; }
+      .wiz-arcana-emoji { width: 34px; height: 34px; }
+      .wiz-arcana-name { font-size: 0.58rem; }
+      .wiz-text-input, .wiz-textarea { font-size: 0.88rem; }
+      .wiz-back-btn, .wiz-next-btn, .wiz-choice { font-size: 0.74rem; }
+      .char-sheet { width: 820px; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <span class="nav-brand">XEVRA</span>
+    <a href="/community/rnc" class="nav-back">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+      RNC Home
+    </a>
+  </nav>
+
+  <!-- ══ WIZARD ══ -->
+  <section id="wizard" class="active">
+    <div class="wiz-inner">
+      <div class="wiz-topbar">
+        <span class="wiz-community-label">Reverse</span>
+        <span class="wiz-step-label" id="wizStepLabel"></span>
+      </div>
+      <div class="wiz-progress"><div class="wiz-progress-fill" id="wizProgressFill"></div></div>
+      <div class="wiz-avatar-wrap">
+        <div class="wiz-avatar-frame" id="wizAvatarFrame">
+          <div class="corner corner-tl"></div><div class="corner corner-tr"></div>
+          <div class="corner corner-bl"></div><div class="corner corner-br"></div>
+          <img src="/assets/xevra.png" alt="Xevra" id="wizAvatarImg">
+        </div>
+        <div class="wiz-wave" id="wizWave"><span></span><span></span><span></span><span></span><span></span></div>
+        <div class="wiz-avatar-name">Xevra</div>
+      </div>
+      <div class="wiz-q-area" id="wizQArea"></div>
+    </div>
+  </section>
+
+  <!-- ══ CARD VIEW ══ -->
+  <section id="card-view">
+    <div class="card-view-inner">
+      <p class="card-view-eyebrow">✦ Character Sheet ✦</p>
+      <div id="card-scroll-wrapper"><div id="charCardContainer"></div></div>
+      <div class="card-actions">
+        <button class="card-btn card-btn-primary" onclick="downloadCard()">บันทึกเป็นรูป</button>
+        <button class="card-btn card-btn-ghost"   onclick="goBackToHub()">เริ่มใหม่</button>
+      </div>
+    </div>
+  </section>
+
+  <script>
+  /* ══ QUESTIONS CONFIG ══ */
+  const QUESTIONS = [
+    { id:"name",        speech:"เน่เน่~ ยินดีต้อนรับนะคะ 🌸",          question:"ตัวละครของนายชื่อว่าอะไร?",   type:"text",     placeholder:"ชื่อตัวละคร..." },
+    { id:"arcana",      speech:"อ๋อ~ งั้นนายสังกัด Arcana ไหนล่ะ?",    question:"เลือก Arcana ของตัวละคร",   type:"arcana",
+      options:[{value:"BEAST",emoji:"🐾"},{value:"PLANT",emoji:"🌿"},{value:"STAR",emoji:"⭐"},{value:"MINERAL",emoji:"💎"},{value:"SPIRIT",emoji:"🔮"},{value:"INTELLECT",emoji:"🧠"}]
+    },
+    { id:"stars",       speech:"โอ้~ แล้วนายอยู่ระดับไหนล่ะเอ่ย?",    question:"ระดับดาวของตัวละคร (1–7)",  type:"stars",    max:7 },
+    { id:"era",         speech:"บอกฉันหน่อยได้มั้ย?",                   question:"นายเข้ามาใน Era ไหน?",      type:"text",     placeholder:"เช่น 1170..." },
+    { id:"mediumType",  speech:"น่าสนใจมากเลยค่ะ~",                     question:"เป็น Medium แบบไหน?",        type:"text",     placeholder:"เช่น Magister..." },
+    { id:"ability",     speech:"อธิบายให้ฉันฟังหน่อยนะคะ 🌸",           question:"ความสามารถของตัวละคร",      type:"textarea", placeholder:"อธิบาย ability ของตัวละคร..." },
+    { id:"age",         speech:"เกือบเสร็จแล้วนะคะ~",                   question:"อายุของตัวละคร?",           type:"text",     placeholder:"เช่น 20..." },
+    { id:"gender",      speech:"ใกล้เสร็จแล้วค่ะ ✨",                   question:"เพศของตัวละคร?",            type:"select",   options:["Male","Female","Other"] },
+    { id:"nationality", speech:"เซฟร่าจดนะคะ~",                         question:"สัญชาติของตัวละคร?",        type:"text",     placeholder:"เช่น Thai..." },
+    { id:"heightweight",speech:"โอ้ เกือบครบแล้วค่ะ!",                  question:"ส่วนสูง / น้ำหนัก?",        type:"text",     placeholder:"เช่น 165cm / 52kg..." },
+    { id:"race",        speech:"แค่สองข้อสุดท้ายแล้วนะคะ~",             question:"ประเภทเผ่าพันธุ์?",         type:"text",     placeholder:"เช่น Human..." },
+    { id:"position",    speech:"ข้อสุดท้ายแล้วค่ะ 🎀",                  question:"ตำแหน่งปัจจุบัน?",          type:"text",     placeholder:"เช่น Intern..." }
+  ];
+
+  /* ══ ARCANA ASSETS ══ */
+  const ARCANA_ASSETS = {
+    BEAST:    "/assets/RNCelement/Beast Full.png",
+    PLANT:    "/assets/RNCelement/Plant Full.png",
+    STAR:     "/assets/RNCelement/Star Full.png",
+    MINERAL:  "/assets/RNCelement/Mineral Full.png",
+    SPIRIT:   "/assets/RNCelement/Spirit Full.png",
+    INTELLECT:"/assets/RNCelement/Intel Full.png",
+    NEUTRAL:  "/assets/RNCelement/Neutral Full.png"
+  };
+  const ARCANA = [
+    { value:"BEAST",    asset: ARCANA_ASSETS.BEAST },
+    { value:"PLANT",    asset: ARCANA_ASSETS.PLANT },
+    { value:"STAR",     asset: ARCANA_ASSETS.STAR },
+    { value:"MINERAL",  asset: ARCANA_ASSETS.MINERAL },
+    { value:"SPIRIT",   asset: ARCANA_ASSETS.SPIRIT },
+    { value:"INTELLECT",asset: ARCANA_ASSETS.INTELLECT }
+  ];
+
+  const state = { step:0, answers:{}, starSelected:0, portraitDataUrl:null, _goingBack:false };
+
+  /* ══ WIZARD ══ */
+  function updateProgress() {
+    const pct = (state.step / QUESTIONS.length) * 100;
+    document.getElementById("wizProgressFill").style.width = pct + "%";
+    document.getElementById("wizStepLabel").textContent = `${Math.min(state.step+1, QUESTIONS.length)} / ${QUESTIONS.length}`;
+  }
+
+  function renderStep() {
+    const area = document.getElementById("wizQArea");
+    if (state.step >= QUESTIONS.length) {
+      area.innerHTML = `<div class="wiz-speech">เยี่ยมเลยค่ะ~ เซฟร่าสร้างบัตรให้แล้วนะคะ 🎀</div>`;
+      startTalking();
+      setTimeout(() => { stopTalking(); showCard(); }, 1200);
+      return;
+    }
+    updateProgress();
+    const q = QUESTIONS[state.step];
+    const back = state._goingBack;
+    startTalking();
+
+    const ALL_Q_CLASSES = ["q-out-fwd","q-out-back","q-in-fwd","q-in-back"];
+    area.classList.remove(...ALL_Q_CLASSES);
+    void area.offsetWidth;
+    area.classList.add(back ? "q-out-back" : "q-out-fwd");
+
+    setTimeout(() => {
+      stopTalking();
+      area.innerHTML = buildQuestionHTML(q);
+      attachQuestionEvents(q);
+      area.classList.remove(...ALL_Q_CLASSES);
+      void area.offsetWidth;
+      area.classList.add(back ? "q-in-back" : "q-in-fwd");
+      setTimeout(() => runTypewriter(q), 310);
+    }, 220);
+  }
+
+  function buildQuestionHTML(q) {
+    const showBack = state.step > 0;
+    let inputHTML = "";
+    if (q.type === "text") {
+      inputHTML = `
+        <input type="text" class="wiz-text-input" id="wiz-input" placeholder="${q.placeholder??''}" maxlength="60" value="${escHtml(state.answers[q.id]??'')}">
+        <div class="wiz-btn-row">
+          ${showBack ? `<button class="wiz-back-btn" onclick="goBack()">← ย้อนกลับ</button>` : '<span></span>'}
+          <button class="wiz-next-btn" onclick="submitText()">ถัดไป →</button>
+        </div>`;
+    } else if (q.type === "textarea") {
+      inputHTML = `
+        <textarea class="wiz-textarea" id="wiz-input" placeholder="${q.placeholder??''}" maxlength="300">${escHtml(state.answers[q.id]??'')}</textarea>
+        <div class="wiz-btn-row">
+          ${showBack ? `<button class="wiz-back-btn" onclick="goBack()">← ย้อนกลับ</button>` : '<span></span>'}
+          <button class="wiz-next-btn" onclick="submitText()">ถัดไป →</button>
+        </div>`;
+    } else if (q.type === "select") {
+      const btns = q.options.map(opt => `<button class="wiz-choice" onclick="submitChoice('${escHtml(opt)}')">${escHtml(opt)}</button>`).join("");
+      inputHTML = `<div class="wiz-choices">${btns}</div>${showBack ? `<div style="text-align:left;margin-top:0.3rem"><button class="wiz-back-btn" onclick="goBack()">← ย้อนกลับ</button></div>` : ''}`;
+    } else if (q.type === "arcana") {
+      const cards = ARCANA.map(opt =>
+        `<div class="wiz-arcana-card" onclick="submitChoice('${opt.value}')"><img class="wiz-arcana-emoji" src="${opt.asset}" alt="${opt.value}"><span class="wiz-arcana-name">${opt.value}</span></div>`
+      ).join("");
+      inputHTML = `<div class="wiz-arcana-grid">${cards}</div>${showBack ? `<div style="text-align:left;margin-top:0.3rem"><button class="wiz-back-btn" onclick="goBack()">← ย้อนกลับ</button></div>` : ''}`;
+    } else if (q.type === "stars") {
+      const current = state.starSelected || parseInt(state.answers[q.id]) || 0;
+      const stars = Array.from({length:q.max},(_,i) => `<span class="wiz-star ${i<current?'lit':''}" data-val="${i+1}">★</span>`).join("");
+      inputHTML = `
+        <div class="wiz-stars-row" id="wiz-stars-row">${stars}</div>
+        <div class="wiz-btn-row" style="margin-top:0.3rem">
+          ${showBack ? `<button class="wiz-back-btn" onclick="goBack()">← ย้อนกลับ</button>` : '<span></span>'}
+          <button class="wiz-next-btn" onclick="submitStars()">ถัดไป →</button>
+        </div>`;
+    }
+    return `
+      <div class="wiz-speech"></div>
+      <div class="deco-divider" style="width:min(280px,90%)"><div class="deco-diamond"></div></div>
+      <div class="wiz-question-text"></div>
+      <span class="wiz-cursor" aria-hidden="true">▸</span>
+      <div class="wiz-input-zone" style="opacity:0;pointer-events:none">${inputHTML}</div>`;
+  }
+
+  /* ══ TYPEWRITER ══ */
+  function typeText(el, text, msPerChar, onDone) {
+    let i = 0;
+    function tick() {
+      if (!el.isConnected) return;
+      el.textContent = text.slice(0, ++i);
+      if (i < text.length) setTimeout(tick, msPerChar);
+      else if (onDone) setTimeout(onDone, 1);
+    }
+    tick();
+  }
+
+  function runTypewriter(q) {
+    const area = document.getElementById("wizQArea");
+    if (!area) return;
+    const speechEl  = area.querySelector(".wiz-speech");
+    const qEl       = area.querySelector(".wiz-question-text");
+    const cursor    = area.querySelector(".wiz-cursor");
+    const inputZone = area.querySelector(".wiz-input-zone");
+    if (!speechEl || !qEl) return;
+
+    startTalking();
+    typeText(speechEl, q.speech, 22, () => {
+      stopTalking();
+      setTimeout(() => {
+        if (!qEl.isConnected) return;
+        typeText(qEl, q.question, 30, () => {
+          if (cursor?.isConnected) cursor.classList.add("active");
+          setTimeout(() => {
+            if (!inputZone?.isConnected) return;
+            cursor?.classList.remove("active");
+            inputZone.style.opacity = "1";
+            inputZone.style.pointerEvents = "auto";
+            const inp = inputZone.querySelector(".wiz-text-input, .wiz-textarea");
+            if (inp) setTimeout(() => inp.focus(), 60);
+          }, 520);
+        });
+      }, 160);
+    });
+  }
+
+  function attachQuestionEvents(q) {
+    const inp = document.getElementById("wiz-input");
+    if (inp && q.type !== "textarea") inp.addEventListener("keydown", e => { if (e.key==="Enter") submitText(); });
+    if (q.type === "stars") {
+      const row = document.getElementById("wiz-stars-row");
+      if (!row) return;
+      row.addEventListener("mouseover", e => {
+        const star = e.target.closest(".wiz-star"); if (!star) return;
+        const val = parseInt(star.dataset.val);
+        row.querySelectorAll(".wiz-star").forEach((s,i) => s.classList.toggle("lit", i<val));
+      });
+      row.addEventListener("mouseleave", () => {
+        row.querySelectorAll(".wiz-star").forEach((s,i) => s.classList.toggle("lit", i<state.starSelected));
+      });
+      row.addEventListener("click", e => {
+        const star = e.target.closest(".wiz-star"); if (!star) return;
+        state.starSelected = parseInt(star.dataset.val);
+        row.querySelectorAll(".wiz-star").forEach((s,i) => s.classList.toggle("lit", i<state.starSelected));
+      });
+    }
+  }
+
+  function submitText()     { const inp=document.getElementById("wiz-input"); if(!inp)return; const val=inp.value.trim(); if(!val){inp.focus();inp.style.borderColor="rgba(200,80,80,0.5)";return;} state._goingBack=false; state.answers[QUESTIONS[state.step].id]=val; state.step++; renderStep(); }
+  function submitChoice(val){ state._goingBack=false; state.answers[QUESTIONS[state.step].id]=val; state.step++; renderStep(); }
+  function submitStars()    { if(!state.starSelected)return; state._goingBack=false; state.answers[QUESTIONS[state.step].id]=state.starSelected; state.step++; renderStep(); }
+  function goBack()         { if(state.step<=0)return; state._goingBack=true; state.step--; renderStep(); }
+
+  function startTalking() { document.getElementById("wizAvatarFrame")?.classList.add("talking"); document.getElementById("wizWave")?.classList.add("talking"); }
+  function stopTalking()  { document.getElementById("wizAvatarFrame")?.classList.remove("talking"); document.getElementById("wizWave")?.classList.remove("talking"); }
+
+  const WIZARD_AVATAR_URL = "/assets/xevra.png";
+  let botAvatarUrl = null;
+
+  function applyBotAvatar(src) {
+    if (!src) return;
+    botAvatarUrl = src;
+    const frame = document.getElementById("wizAvatarFrame");
+    if (!frame) return;
+    const existing = frame.querySelector("img");
+    if (existing) existing.remove();
+    const img = document.createElement("img");
+    img.src = src; img.alt = "Xevra";
+    frame.appendChild(img);
+  }
+
+  function fetchBotAvatar() {
+    if (botAvatarUrl) return;
+    const preload = new Image();
+    preload.onload = () => applyBotAvatar(WIZARD_AVATAR_URL);
+    preload.onerror = () => {
+      fetch("/api/bot-info").then(r=>r.json()).then(d => {
+        if (d.avatar) applyBotAvatar(d.avatar);
+      }).catch(()=>{});
+    };
+    preload.src = WIZARD_AVATAR_URL;
+  }
+
+  /* ══ CARD VIEW ══ */
+  function showCard() {
+    document.getElementById("wizard").classList.remove("active");
+    document.getElementById("card-view").classList.add("active");
+    document.getElementById("charCardContainer").innerHTML = buildCard(state.answers);
+  }
+
+  function buildCard(ans) {
+    const ALL_ARCANA = [{value:"BEAST"},{value:"PLANT"},{value:"STAR"},{value:"MINERAL"},{value:"SPIRIT"},{value:"INTELLECT"}];
+    const arcanaGrid = ALL_ARCANA.map(a => `<div class="sheet-arcana-item ${ans.arcana===a.value?'active':''}"><img class="sheet-arcana-emoji" src="${ARCANA_ASSETS[a.value]}" alt="${a.value}"><span class="sheet-arcana-label">${a.value}</span></div>`).join("");
+    const starCount = parseInt(ans.stars)||0;
+    const starsHtml = "★".repeat(starCount)+"☆".repeat(Math.max(0,7-starCount));
+    const statRows = ["COR","MNF","RFX","SCR","DEF"].map(s=>`<div class="sheet-stat-row"><span class="sheet-stat-label">${s}</span><span class="sheet-stat-val editable-stat" data-stat="${s}" title="คลิกเพื่อใส่ค่า">${escHtml(ans.stats?.[s]??"—")}</span></div>`).join("");
+    const portraitContent = state.portraitDataUrl
+      ? `<img src="${state.portraitDataUrl}" alt="portrait">`
+      : `<label class="portrait-upload-hint" title="คลิกเพื่ออัปโหลดรูป"><input type="file" accept="image/*" onchange="handlePortraitUpload(event)"><span style="font-size:1.4rem;opacity:0.5">＋</span><span>คลิกเพื่อใส่รูปตัวละคร</span></label>`;
+    return `
+    <div class="char-sheet" id="charCard">
+      <div class="sheet-left">
+        <div class="sheet-arcana-grid">${arcanaGrid}</div>
+        <div class="sheet-stars">${starsHtml}</div>
+        <div class="sheet-name">${escHtml(ans.name??"—")}</div>
+        <div class="sheet-era">Era · ${escHtml(ans.era??"0000")} ปีที่จากมา</div>
+        <div class="sheet-stats"><div class="sheet-stats-total">Total :</div>${statRows}</div>
+      </div>
+      <div class="sheet-center">
+        <div class="sheet-portrait-area" id="portraitArea">${portraitContent}</div>
+        <div class="sheet-center-deco">✦ ✦ ✦</div>
+      </div>
+      <div class="sheet-right">
+        <div class="sheet-right-top">
+          <div class="sheet-medium-header"><span class="sheet-medium-label">Medium</span><span class="sheet-medium-rank">△ △△ △△△</span></div>
+          <div class="sheet-medium-type">${escHtml(ans.mediumType??"—")}</div>
+          <div class="sheet-ability-box">${escHtml(ans.ability??"—")}</div>
+        </div>
+        <div class="sheet-right-bottom">
+          <div class="sheet-portrait-title">Portrait</div>
+          <div class="sheet-info-row"><span class="sheet-info-label">Age</span><span class="sheet-info-val">${escHtml(ans.age??"—")}</span></div>
+          <div class="sheet-info-row"><span class="sheet-info-label">Gender</span><span class="sheet-info-val">${escHtml(ans.gender??"—")}</span></div>
+          <div class="sheet-info-row"><span class="sheet-info-label">Nationality</span><span class="sheet-info-val">${escHtml(ans.nationality??"—")}</span></div>
+          <div class="sheet-info-row"><span class="sheet-info-label">Height/Weight</span><span class="sheet-info-val">${escHtml(ans.heightweight??"—")}</span></div>
+          <div class="sheet-info-row"><span class="sheet-info-label">Race</span><span class="sheet-info-val">${escHtml(ans.race??"—")}</span></div>
+          <div class="sheet-info-row"><span class="sheet-info-label">Position</span><span class="sheet-pos-badge">${escHtml(ans.position??"—")}</span></div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  function handlePortraitUpload(event) {
+    const file = event.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      state.portraitDataUrl = e.target.result;
+      const area = document.getElementById("portraitArea");
+      if (area) area.innerHTML = `<img src="${e.target.result}" alt="portrait">`;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  async function downloadCard() {
+    const card = document.getElementById("charCard"); if (!card) return;
+    if (typeof html2canvas === "undefined") { alert("กำลังโหลด... ลองอีกครั้งนะคะ 🙏"); return; }
+    try {
+      const canvas = await html2canvas(card, {backgroundColor:null, scale:2.5, useCORS:true, logging:false});
+      const link = document.createElement("a");
+      link.download = `${state.answers.name??"character"}-sheet.png`;
+      link.href = canvas.toDataURL("image/png"); link.click();
+    } catch(err) { console.error(err); alert("บันทึกรูปไม่สำเร็จ ลองถ่ายภาพหน้าจอแทนนะคะ 🙏"); }
+  }
+
+  function goBackToHub() {
+    window.location.href = "/community/rnc";
+  }
+
+  function escHtml(s) { return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+  /* ══ INLINE STAT EDITING ══ */
+  document.addEventListener("click", e => {
+    const stat = e.target.closest("#charCard .editable-stat");
+    if (!stat || stat.querySelector("input")) return;
+    const key = stat.dataset.stat;
+    const cur = state.answers.stats?.[key] ?? "";
+    const inp = document.createElement("input");
+    inp.type = "text"; inp.maxLength = 5; inp.size = 4;
+    inp.value = cur === "—" ? "" : cur;
+    const save = () => {
+      const val = inp.value.trim() || "—";
+      if (!state.answers.stats) state.answers.stats = {};
+      state.answers.stats[key] = val;
+      stat.textContent = val;
+    };
+    inp.addEventListener("blur", save);
+    inp.addEventListener("keydown", e2 => { if (e2.key === "Enter" || e2.key === "Escape") inp.blur(); });
+    stat.textContent = "";
+    stat.appendChild(inp);
+    inp.focus(); inp.select();
+  });
+
+  /* ══ START ══ */
+  fetchBotAvatar();
+  renderStep();
+  </script>
+</body>
+</html>

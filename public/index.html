@@ -55,6 +55,11 @@
     }
     .nav-link:hover { background: #e5e5e5; color: #111; }
     .nav-link.active { font-weight: 600; color: #111; background: #e5e5e5; }
+    .nav-community {
+      color: #c9a96e;
+      border: 1px solid rgba(201,169,110,0.35);
+    }
+    .nav-community:hover { background: rgba(201,169,110,0.1); color: #e8cf9a; }
     .icon-btn {
       display: flex; align-items: center; justify-content: center;
       width: 32px; height: 32px;
@@ -529,6 +534,7 @@
       <a href="/" class="nav-link active">Home</a>
       <a href="/how-to-use" class="nav-link">How to Use</a>
       <a href="/about" class="nav-link">About</a>
+      <a href="/community" class="nav-link nav-community">Community</a>
       <button id="themeToggle" class="icon-btn" onclick="toggleTheme()"></button>
       <div class="invite">
         <a href="https://discord.com/oauth2/authorize?client_id=1482929833137799399" target="_blank" class="icon-btn">
