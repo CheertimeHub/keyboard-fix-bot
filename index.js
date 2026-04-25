@@ -163,6 +163,14 @@ http.createServer((req, res) => {
       res.writeHead(200, { "Content-Type": mime, "Cache-Control": "public, max-age=86400" });
       res.end(data);
     });
+  } else if (req.method === "GET" && /\.(js|css)$/.test(req.url)) {
+    const filePath = path.join(__dirname, "public", decodeURIComponent(req.url.replace(/\?.*$/, "")));
+    fs.readFile(filePath, (err, data) => {
+      if (err) { res.writeHead(404); res.end(); return; }
+      const mime = req.url.endsWith(".css") ? "text/css" : "application/javascript";
+      res.writeHead(200, { "Content-Type": mime });
+      res.end(data);
+    });
   } else {
     const page = req.url === "/about" ? "about.html"
                : req.url === "/how-to-use" ? "how-to-use.html"
