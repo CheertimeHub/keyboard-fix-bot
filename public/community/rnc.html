@@ -473,7 +473,7 @@
       width: 0; height: 0;
       border-left: 120px solid transparent;
       border-right: 120px solid transparent;
-      border-top: 260px solid rgba(255,220,100,0.045);
+      border-bottom: 260px solid rgba(255,220,100,0.045);
       pointer-events: none;
       transition: opacity 0.6s;
       filter: blur(18px);
@@ -1399,7 +1399,6 @@
     const container = document.getElementById("lamp-container");
     hub.addEventListener("scroll", () => {
       const hidden = hub.scrollTop > 40;
-      tab.classList.toggle("scroll-hidden", hidden);
       container.classList.toggle("scroll-hidden", hidden);
     }, { passive: true });
   })();
