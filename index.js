@@ -2,7 +2,7 @@ require("dotenv").config();
 const { Client, GatewayIntentBits, Partials } = require("discord.js");
 const { detectAndConvert } = require("./services/keyboard");
 const { parseAndExecute } = require("./services/commands");
-const { synthesize } = require("./services/tts");
+const { synthesize, setVoice, listVoices } = require("./services/tts");
 const {
   joinVoiceChannel, createAudioPlayer, createAudioResource,
   AudioPlayerStatus, VoiceConnectionStatus, entersState,
@@ -69,7 +69,7 @@ async function processQueue(session, guildId) {
   session.speaking = true;
   const text = session.queue.shift();
   try {
-    const stream = await synthesize(text);
+    const stream = await synthesize(text, guildId);
     const resource = createAudioResource(stream);
     session.player.play(resource);
     session.player.once(AudioPlayerStatus.Idle, () => processQueue(session, guildId));
@@ -142,6 +142,30 @@ client.on("messageCreate", async (msg) => {
       } catch (err) {
         console.error("❌ TTS join error:", err);
         await msg.reply("เข้า VC ไม่ได้ 😅");
+      }
+      return;
+    }
+
+    // TTS voice: "@บอท voice" → แสดงรายการ, "@บอท voice th th-wavenet-b" → เปลี่ยน
+    if (/^voice/i.test(body)) {
+      const parts = body.split(/\s+/);
+      if (parts.length === 1) {
+        // แสดงรายการเสียงทั้งหมด
+        const voices = listVoices();
+        const lines = Object.entries(voices).map(([key, v]) =>
+          `\`${key}\` — ${v.languageCode} ${v.ssmlGender === "FEMALE" ? "♀" : "♂"} (${v.name})`
+        );
+        await msg.reply(
+          `**เสียงที่มี:**\n${lines.join("\n")}\n\n` +
+          `ใช้ \`@บอท voice th <key>\` หรือ \`@บอท voice en <key>\` เพื่อเปลี่ยน`
+        );
+      } else if (parts.length === 3) {
+        const [, lang, key] = parts;
+        const ok = setVoice(msg.guild.id, lang, key);
+        if (ok) await msg.reply(`✅ เปลี่ยนเสียง **${lang}** เป็น \`${key}\` แล้ว`);
+        else await msg.reply(`❌ ไม่รู้จัก key นั้น ลอง \`@บอท voice\` เพื่อดูรายการ`);
+      } else {
+        await msg.reply(`ใช้ \`@บอท voice\` เพื่อดูรายการ หรือ \`@บอท voice th th-wavenet-b\` เพื่อเปลี่ยน`);
       }
       return;
     }
