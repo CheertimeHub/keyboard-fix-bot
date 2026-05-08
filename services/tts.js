@@ -11,6 +11,8 @@ const VOICES = {
   "th-wavenet-b":  { languageCode: "th-TH", name: "th-TH-Wavenet-B",  ssmlGender: "MALE"   },
   "th-wavenet-c":  { languageCode: "th-TH", name: "th-TH-Wavenet-C",  ssmlGender: "FEMALE" },
   "th-standard-a": { languageCode: "th-TH", name: "th-TH-Standard-A", ssmlGender: "FEMALE" },
+  "th-standard-b": { languageCode: "th-TH", name: "th-TH-Standard-B", ssmlGender: "MALE"   },
+  "th-standard-c": { languageCode: "th-TH", name: "th-TH-Standard-C", ssmlGender: "FEMALE" },
   // อังกฤษ
   "en-neural-f":   { languageCode: "en-US", name: "en-US-Neural2-F",  ssmlGender: "FEMALE" },
   "en-neural-d":   { languageCode: "en-US", name: "en-US-Neural2-D",  ssmlGender: "MALE"   },
@@ -23,7 +25,7 @@ const guildVoices = new Map();
 
 function getVoiceConfig(guildId, lang) {
   const pref = guildVoices.get(guildId);
-  const key = pref?.[lang] ?? (lang === "th" ? "th-wavenet-a" : "en-wavenet-f");
+  const key = pref?.[lang] ?? (lang === "th" ? "th-standard-a" : "en-wavenet-f");
   return VOICES[key];
 }
 
