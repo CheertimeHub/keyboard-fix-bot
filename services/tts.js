@@ -75,6 +75,7 @@ function preprocessText(text) {
 
 async function synthesize(text, guildId) {
   const processed = preprocessText(text);
+  console.log(`[TTS] input: ${JSON.stringify(text)} → processed: ${JSON.stringify(processed)}`);
   if (!processed) return null;
 
   const lang = detectLang(processed);
