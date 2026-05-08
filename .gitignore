@@ -1,2 +1,4 @@
 node_modules/
 .env
+google-credentials.json
+xevra-tts-functions-f5a8e0b7b1f1.json

@@ -1,23 +1,39 @@
 const textToSpeech = require("@google-cloud/text-to-speech");
 const { Readable } = require("stream");
+const fs = require("fs");
+const path = require("path");
 
-const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON || "{}");
+const credFile = path.join(__dirname, "..", "xevra-tts-functions-f5a8e0b7b1f1.json");
+const credentials = fs.existsSync(credFile)
+  ? JSON.parse(fs.readFileSync(credFile, "utf8"))
+  : JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON || "{}");
 const client = new textToSpeech.TextToSpeechClient({ credentials });
 
 const VOICES = {
-  // ไทย
-  "th-neural-c":   { languageCode: "th-TH", name: "th-TH-Neural2-C",  ssmlGender: "FEMALE" },
-  "th-wavenet-a":  { languageCode: "th-TH", name: "th-TH-Wavenet-A",  ssmlGender: "FEMALE" },
-  "th-wavenet-b":  { languageCode: "th-TH", name: "th-TH-Wavenet-B",  ssmlGender: "MALE"   },
-  "th-wavenet-c":  { languageCode: "th-TH", name: "th-TH-Wavenet-C",  ssmlGender: "FEMALE" },
-  "th-standard-a": { languageCode: "th-TH", name: "th-TH-Standard-A", ssmlGender: "FEMALE" },
-  "th-standard-b": { languageCode: "th-TH", name: "th-TH-Standard-B", ssmlGender: "MALE"   },
-  "th-standard-c": { languageCode: "th-TH", name: "th-TH-Standard-C", ssmlGender: "FEMALE" },
-  // อังกฤษ
-  "en-neural-f":   { languageCode: "en-US", name: "en-US-Neural2-F",  ssmlGender: "FEMALE" },
-  "en-neural-d":   { languageCode: "en-US", name: "en-US-Neural2-D",  ssmlGender: "MALE"   },
-  "en-wavenet-f":  { languageCode: "en-US", name: "en-US-Wavenet-F",  ssmlGender: "FEMALE" },
-  "en-wavenet-d":  { languageCode: "en-US", name: "en-US-Wavenet-D",  ssmlGender: "MALE"   },
+  // ไทย Chirp3-HD (รุ่นใหม่สุด)
+  "th-sulafat":    { languageCode: "th-TH", name: "th-TH-Chirp3-HD-Sulafat",      ssmlGender: "FEMALE" },
+  "th-aoede":      { languageCode: "th-TH", name: "th-TH-Chirp3-HD-Aoede",        ssmlGender: "FEMALE" },
+  "th-kore":       { languageCode: "th-TH", name: "th-TH-Chirp3-HD-Kore",         ssmlGender: "FEMALE" },
+  "th-leda":       { languageCode: "th-TH", name: "th-TH-Chirp3-HD-Leda",         ssmlGender: "FEMALE" },
+  "th-zephyr":     { languageCode: "th-TH", name: "th-TH-Chirp3-HD-Zephyr",       ssmlGender: "FEMALE" },
+  "th-charon":     { languageCode: "th-TH", name: "th-TH-Chirp3-HD-Charon",       ssmlGender: "MALE"   },
+  "th-puck":       { languageCode: "th-TH", name: "th-TH-Chirp3-HD-Puck",         ssmlGender: "MALE"   },
+  "th-orus":       { languageCode: "th-TH", name: "th-TH-Chirp3-HD-Orus",         ssmlGender: "MALE"   },
+  // ไทย รุ่นเก่า
+  "th-neural-c":   { languageCode: "th-TH", name: "th-TH-Neural2-C",              ssmlGender: "FEMALE" },
+  "th-standard-a": { languageCode: "th-TH", name: "th-TH-Standard-A",             ssmlGender: "FEMALE" },
+  // อังกฤษ Chirp3-HD
+  "en-sulafat":    { languageCode: "en-US", name: "en-US-Chirp3-HD-Sulafat",      ssmlGender: "FEMALE" },
+  "en-aoede":      { languageCode: "en-US", name: "en-US-Chirp3-HD-Aoede",        ssmlGender: "FEMALE" },
+  "en-kore":       { languageCode: "en-US", name: "en-US-Chirp3-HD-Kore",         ssmlGender: "FEMALE" },
+  "en-zephyr":     { languageCode: "en-US", name: "en-US-Chirp3-HD-Zephyr",       ssmlGender: "FEMALE" },
+  "en-charon":     { languageCode: "en-US", name: "en-US-Chirp3-HD-Charon",       ssmlGender: "MALE"   },
+  "en-puck":       { languageCode: "en-US", name: "en-US-Chirp3-HD-Puck",         ssmlGender: "MALE"   },
+  // อังกฤษ รุ่นเก่า
+  "en-neural-f":   { languageCode: "en-US", name: "en-US-Neural2-F",              ssmlGender: "FEMALE" },
+  "en-neural-d":   { languageCode: "en-US", name: "en-US-Neural2-D",              ssmlGender: "MALE"   },
+  "en-wavenet-f":  { languageCode: "en-US", name: "en-US-Wavenet-F",              ssmlGender: "FEMALE" },
+  "en-wavenet-d":  { languageCode: "en-US", name: "en-US-Wavenet-D",              ssmlGender: "MALE"   },
 };
 
 // เสียง default ต่อ guild: guildId → { th: voiceKey, en: voiceKey }
@@ -25,7 +41,7 @@ const guildVoices = new Map();
 
 function getVoiceConfig(guildId, lang) {
   const pref = guildVoices.get(guildId);
-  const key = pref?.[lang] ?? (lang === "th" ? "th-standard-a" : "en-wavenet-f");
+  const key = pref?.[lang] ?? (lang === "th" ? "th-sulafat" : "en-sulafat");
   return VOICES[key];
 }
 
@@ -66,6 +82,9 @@ function preprocessText(text) {
   text = text.replace(/\p{Emoji_Presentation}/gu, "");
   text = text.replace(/\p{Extended_Pictographic}/gu, "");
 
+  // 555 → ฮ่าๆ ตามความยาว (55=ฮ่าๆ, 555=ฮ่าๆๆ, 5555=ฮ่าๆๆๆ ...)
+  text = text.replace(/5{2,}/g, (m) => "ฮ่า" + "ๆ".repeat(Math.ceil(m.length / 2)));
+
   text = text.trim();
   if (!text) return null;
 
@@ -77,11 +96,9 @@ function preprocessText(text) {
 
 async function synthesize(text, guildId) {
   const processed = preprocessText(text);
-  console.log(`[TTS] input: ${JSON.stringify(text)} → processed: ${JSON.stringify(processed)}`);
   if (!processed) return null;
 
-  const lang = detectLang(processed);
-  const voice = getVoiceConfig(guildId, lang);
+  const voice = getVoiceConfig(guildId, "th");
 
   const [response] = await client.synthesizeSpeech({
     input: { text: processed },

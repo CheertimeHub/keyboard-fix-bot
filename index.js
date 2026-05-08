@@ -5,7 +5,7 @@ const { parseAndExecute } = require("./services/commands");
 const { synthesize, setVoice, listVoices } = require("./services/tts");
 const {
   joinVoiceChannel, createAudioPlayer, createAudioResource,
-  AudioPlayerStatus, VoiceConnectionStatus, entersState,
+  AudioPlayerStatus, VoiceConnectionStatus, entersState, StreamType,
 } = require("@discordjs/voice");
 
 // Debug: Show environment
@@ -71,7 +71,7 @@ async function processQueue(session, guildId) {
   try {
     const stream = await synthesize(text, guildId);
     if (!stream) { processQueue(session, guildId); return; }
-    const resource = createAudioResource(stream);
+    const resource = createAudioResource(stream, { inputType: StreamType.OggOpus });
     session.player.play(resource);
     session.player.once(AudioPlayerStatus.Idle, () => processQueue(session, guildId));
   } catch (err) {
