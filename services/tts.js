@@ -60,10 +60,9 @@ function preprocessText(text) {
   // ลบ mention <@id> <@!id> <#id> <@&id>
   text = text.replace(/<[@#][!&]?\d+>/g, "");
 
-  // ลบ Unicode emoji (standard emoji ranges)
-  text = text.replace(/[\u{1F000}-\u{1FFFF}]/gu, "");
-  text = text.replace(/[\u{2600}-\u{27FF}]/gu, "");
-  text = text.replace(/[\u{FE00}-\u{FEFF}]/gu, "");
+  // ลบ Unicode emoji ใช้ property escape เพื่อไม่กิน Thai chars
+  text = text.replace(/\p{Emoji_Presentation}/gu, "");
+  text = text.replace(/\p{Extended_Pictographic}/gu, "");
 
   text = text.trim();
   if (!text) return null;
