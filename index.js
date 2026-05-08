@@ -70,6 +70,7 @@ async function processQueue(session, guildId) {
   const text = session.queue.shift();
   try {
     const stream = await synthesize(text, guildId);
+    if (!stream) { processQueue(session, guildId); return; }
     const resource = createAudioResource(stream);
     session.player.play(resource);
     session.player.once(AudioPlayerStatus.Idle, () => processQueue(session, guildId));
@@ -95,16 +96,18 @@ client.on("voiceStateUpdate", (oldState) => {
 client.on("messageCreate", async (msg) => {
   if (msg.author.bot) return;
 
-  // auto-read ถ้าอยู่ใน TTS session channel (ไม่ต้อง mention)
+  const isMentioned = msg.mentions.has(client.user);
+
+  // auto-read ถ้าอยู่ใน TTS session channel และไม่ได้ mention บอท
   const session = ttsSessions.get(msg.guild?.id);
-  if (session && msg.channelId === session.textChannelId) {
+  if (session && msg.channelId === session.textChannelId && !isMentioned) {
     const text = msg.content.trim();
     if (text) queueTTS(session, text, msg.guild.id);
     return;
   }
 
   // ต้องแท็กบอทสำหรับ command ทั้งหมด
-  if (!msg.mentions.has(client.user)) return;
+  if (!isMentioned) return;
 
   const body = msg.content.replace(/<@!?\d+>/g, "").trim();
 
@@ -210,6 +213,10 @@ client.on("messageCreate", async (msg) => {
     }
 
     await originalMsg.reply(`\`\`\`\n: ${result}\n\`\`\``);
+
+    // อ่านผลที่แปลงออกเสียงถ้า TTS session active อยู่
+    const ttsSession = ttsSessions.get(msg.guild?.id);
+    if (ttsSession) queueTTS(ttsSession, result, msg.guild.id);
   } catch (err) {
     console.error("❌ Error:", err);
     await msg.reply("เกิดข้อผิดพลาดบางอย่าง ลองใหม่นะ 😅");
@@ -234,6 +241,10 @@ client.on("messageReactionAdd", async (reaction, user) => {
     if (direction === "none") return;
 
     await reaction.message.reply(`\`\`\`\n: ${result}\n\`\`\``);
+
+    // อ่านผลที่แปลงออกเสียงถ้า TTS session active อยู่
+    const ttsSession = ttsSessions.get(reaction.message.guild?.id);
+    if (ttsSession) queueTTS(ttsSession, result, reaction.message.guild.id);
   } catch (err) {
     console.error("❌ Reaction translate error:", err);
   }

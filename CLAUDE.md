@@ -75,9 +75,38 @@ Bot รองรับ commands ที่ใช้ @mention โดยตรง (
 | `GET /` | `public/index.html` |
 | `GET /about` | `public/about.html` |
 | `GET /how-to-use` | `public/how-to-use.html` |
+| `GET /community` | `public/community.html` — Community landing |
+| `GET /community/rnc` | `public/community/rnc.html` — RNC hub + mini-game |
+| `GET /community/rnc/create` | `public/community/rnc/create.html` — Character card wizard |
 | `GET /manifest.json` | PWA manifest จาก `public/manifest.json` |
+| `GET /assets/*` | Static assets (images, etc.) จาก `public/assets/` |
 | `GET /api/bot-info` | ส่งคืน `{ avatar, name }` ของ bot |
 | `POST /api/convert` | รับ `{ text }`, ส่งคืน `{ result, direction }` |
+
+### Community Pages (`public/community/`)
+
+**`public/community/rnc.html`** — RNC hub (pure frontend, dark art deco theme)
+- Intro animation → hub panel (scrollable `position: fixed`)
+- **Hanging lamp** ซ่อนอยู่หลัง triangle pull-tab (`#lamp-tab`) ที่ top center — กดสามเหลี่ยมเพื่อเรียกโคมออกมา
+- คลิกโคมไฟ → ปิดไฟ → เริ่ม mini-game **"Find the Labuu"**
+- **Flashlight cursor**: `radial-gradient` overlay + custom diamond cursor ทำงานเมื่อ `body.dark-mode` — ต้องใช้ `document.body.classList.contains("dark-mode")` ไม่ใช่ local variable
+- **Mini-game**: ลาบู้ 7 ตัว spawn ในพื้นที่ `GAME_TOP = 52px` ถึง `window.innerHeight` — ใช้ `gameArea()` ทุกที่เพื่อให้ตำแหน่งถูกต้อง
+  - ลาบู้มี behavior: dodger (หลบเมาส์, cooldown-based), peeker (แอบโผล่ขอบจอ), hover-fleeer (หนีก่อนคลิก, 35% chance)
+  - ลาบู้ปลอม 2 ตัว: คลิกแล้วหนีหรือ wiggle แต่ไม่นับ counter
+  - Counter + Timer (60s) แสดงระหว่างเล่น
+  - หมดเวลา → jumpscare (ลาบู้ตัวใหญ่พุ่งเข้ากลางจอ scale 130vw/vh) → ปุ่มหัวใจ SVG เต้น → กลับสู่หน้าปกติ
+  - เก็บครบ 7 ตัว → win screen → ไฟกลับมา
+
+**`public/community/rnc/create.html`** — Character card wizard
+- Wizard ถามคำถามทีละข้อ → generate character card
+- "เริ่มใหม่" → `window.location.href = "/community/rnc"`
+- Label ใน wizard topbar แสดงเป็น "Reverse" (ไม่ใช่ "RNC")
+
+**Design system** (ใช้ร่วมกันทุกหน้า community):
+- Background: `#08080f` dark near-black
+- Accent: `--gold: #c9a96e`, `--gold-l: #e8cf9a`
+- Font: `Cinzel` (serif headers), `Sarabun` (Thai body text)
+- Art deco corners, deco dividers ผ่าน `.corner`, `.deco-divider`, `.deco-diamond`
 
 ## Environment Variables
 
