@@ -82,8 +82,12 @@ function preprocessText(text) {
   text = text.replace(/\p{Emoji_Presentation}/gu, "");
   text = text.replace(/\p{Extended_Pictographic}/gu, "");
 
-  // 555 → ฮ่าๆ ตามความยาว (55=ฮ่าๆ, 555=ฮ่าๆๆ, 5555=ฮ่าๆๆๆ ...)
-  text = text.replace(/5{2,}/g, (m) => "ฮ่า" + "ๆ".repeat(Math.ceil(m.length / 2)));
+  // 555 / HAHAHA / lol → ฮ่าๆ ตามความยาว
+  text = text.replace(/5{2,}/g, (m) => "ฮ่า".repeat(Math.ceil(m.length / 2)));
+  text = text.replace(/\b(ha){2,}\b/gi, (m) => "ฮ่า".repeat(Math.floor(m.length / 4) || 1));
+  text = text.replace(/\blol\b/gi, "ฮ่าฮ่า");
+  text = text.replace(/\blmao\b/gi, "ฮ่าฮ่าฮ่า");
+  text = text.replace(/\blmfao\b/gi, "ฮ่าฮ่าฮ่าฮ่า");
 
   text = text.trim();
   if (!text) return null;
