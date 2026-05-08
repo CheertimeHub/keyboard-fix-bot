@@ -2,6 +2,11 @@ require("dotenv").config();
 const { Client, GatewayIntentBits, Partials } = require("discord.js");
 const { detectAndConvert } = require("./services/keyboard");
 const { parseAndExecute } = require("./services/commands");
+const { synthesize } = require("./services/tts");
+const {
+  joinVoiceChannel, createAudioPlayer, createAudioResource,
+  AudioPlayerStatus, VoiceConnectionStatus, entersState,
+} = require("@discordjs/voice");
 
 // Debug: Show environment
 console.log("🔍 Environment Check:");
@@ -19,6 +24,7 @@ const client = new Client({
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.GuildMessageReactions,
+    GatewayIntentBits.GuildVoiceStates,
   ],
   partials: [Partials.Message, Partials.Reaction, Partials.Channel],
 });
@@ -49,15 +55,108 @@ client.once("ready", () => {
 client.on("shardError", console.error)
 client.on("error", console.error)
 
+/* ══ TTS SESSION ══ */
+// guildId → { connection, player, textChannelId, voiceChannelId, queue, speaking }
+const ttsSessions = new Map();
+
+function queueTTS(session, text, guildId) {
+  session.queue.push(text);
+  if (!session.speaking) processQueue(session, guildId);
+}
+
+async function processQueue(session, guildId) {
+  if (!session.queue.length) { session.speaking = false; return; }
+  session.speaking = true;
+  const text = session.queue.shift();
+  try {
+    const stream = await synthesize(text);
+    const resource = createAudioResource(stream);
+    session.player.play(resource);
+    session.player.once(AudioPlayerStatus.Idle, () => processQueue(session, guildId));
+  } catch (err) {
+    console.error("❌ TTS processQueue error:", err);
+    session.speaking = false;
+  }
+}
+
+// ออก VC อัตโนมัติเมื่อไม่มีคนเหลือ
+client.on("voiceStateUpdate", (oldState) => {
+  const session = ttsSessions.get(oldState.guild.id);
+  if (!session) return;
+  const vc = oldState.guild.channels.cache.get(session.voiceChannelId);
+  const humans = vc?.members?.filter(m => !m.user.bot).size ?? 0;
+  if (humans === 0) {
+    session.connection.destroy();
+    ttsSessions.delete(oldState.guild.id);
+    console.log(`🔇 TTS session ended (empty VC) in guild ${oldState.guild.id}`);
+  }
+});
+
 client.on("messageCreate", async (msg) => {
-  // ไม่ตอบสนองต่อ bot อื่น
   if (msg.author.bot) return;
 
-  // ต้องแท็กบอทเท่านั้น
+  // auto-read ถ้าอยู่ใน TTS session channel (ไม่ต้อง mention)
+  const session = ttsSessions.get(msg.guild?.id);
+  if (session && msg.channelId === session.textChannelId) {
+    const text = msg.content.trim();
+    if (text) queueTTS(session, text, msg.guild.id);
+    return;
+  }
+
+  // ต้องแท็กบอทสำหรับ command ทั้งหมด
   if (!msg.mentions.has(client.user)) return;
 
-  // ถ้าไม่ได้ reply → ลองตีความเป็น command
+  const body = msg.content.replace(/<@!?\d+>/g, "").trim();
+
+  // ถ้าไม่ได้ reply → command
   if (!msg.reference) {
+    // TTS join
+    if (/^join$/i.test(body)) {
+      const member = msg.guild?.members.cache.get(msg.author.id);
+      const voiceChannel = member?.voice?.channel;
+      if (!voiceChannel) {
+        await msg.reply("เข้า VC ก่อนนะ แล้วค่อย @ฉัน join 🎤");
+        return;
+      }
+      if (ttsSessions.has(msg.guild.id)) {
+        await msg.reply("กำลังทำงานอยู่ใน VC แล้วนะ 🔊");
+        return;
+      }
+      try {
+        const connection = joinVoiceChannel({
+          channelId: voiceChannel.id,
+          guildId: msg.guild.id,
+          adapterCreator: msg.guild.voiceAdapterCreator,
+          selfDeaf: false,
+        });
+        await entersState(connection, VoiceConnectionStatus.Ready, 10_000);
+        const player = createAudioPlayer();
+        connection.subscribe(player);
+        ttsSessions.set(msg.guild.id, {
+          connection, player,
+          textChannelId: msg.channelId,
+          voiceChannelId: voiceChannel.id,
+          queue: [], speaking: false,
+        });
+        await msg.channel.send("# Xevra ได้เข้าร่วมการสนทนานี้แล้ว");
+      } catch (err) {
+        console.error("❌ TTS join error:", err);
+        await msg.reply("เข้า VC ไม่ได้ 😅");
+      }
+      return;
+    }
+
+    // TTS leave
+    if (/^(leave|หยุด)$/i.test(body)) {
+      const s = ttsSessions.get(msg.guild?.id);
+      if (!s) { await msg.reply("ไม่ได้อยู่ใน VC นะ 🤔"); return; }
+      s.player.stop();
+      s.connection.destroy();
+      ttsSessions.delete(msg.guild.id);
+      await msg.channel.send("# Xevra ได้ออกจากห้องสนทนานี้แล้ว");
+      return;
+    }
+
     const commandResult = parseAndExecute(msg.content);
     if (commandResult) {
       await msg.channel.sendTyping();
@@ -71,7 +170,6 @@ client.on("messageCreate", async (msg) => {
 
   try {
     await msg.channel.sendTyping();
-    // ดึงข้อความต้นฉบับ
     const originalMsg = await msg.channel.messages.fetch(msg.reference.messageId);
     const originalText = originalMsg.content.trim();
 
