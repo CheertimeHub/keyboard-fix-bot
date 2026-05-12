@@ -121,6 +121,7 @@ function isMostlyThai(text) {
   return thaiCount / relevant.length > 0.5;
 }
 
+
 // ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
@@ -235,9 +236,13 @@ function fixCapsLock(text) {
  * @returns {{ result: string, direction: string }}
  */
 function detectAndConvert(text) {
-  // Thai text → Caps Lock fix
   if (isMostlyThai(text)) {
-    return fixCapsLock(text);
+    const capsResult = fixCapsLock(text);
+    if (capsResult.direction !== "none") return capsResult;
+    // caps-fix ไม่ได้ผล → ลอง thai→eng
+    const thaiToEngResult = [...text].map((c) => thaiToEng[c] ?? c).join("");
+    if (thaiToEngResult !== text) return { result: thaiToEngResult, direction: "thai→eng" };
+    return capsResult;
   }
 
   // ASCII text → keyboard layout fix
