@@ -409,60 +409,63 @@
     #card-view {
       position: fixed; top: 52px; left: 0; right: 0; bottom: 0;
       z-index: 60; background: #08080f;
-      display: none; flex-direction: column; align-items: center;
+      display: none; align-items: center; justify-content: center;
       overflow-y: auto; padding: 1rem;
     }
     #card-view.active { display: flex; }
     .card-view-inner {
-      margin: auto;
       display: flex; flex-direction: column; align-items: center;
       gap: 1.25rem; width: 100%; padding: 0.5rem 0;
     }
     .card-view-eyebrow { font-family: 'Cinzel', serif; font-size: 0.7rem; letter-spacing: 0.4em; color: var(--text-dim); text-transform: uppercase; }
-    #card-scroll-wrapper { width: 100%; overflow-x: auto; display: flex; justify-content: center; }
+    #card-scroll-wrapper { width: 100%; overflow-x: auto; display: flex; justify-content: center; padding: 0 1rem; }
 
-    .char-sheet { display: flex; width: min(820px, 100%); border: 1px solid rgba(201,169,110,0.35); overflow: hidden; font-family: -apple-system, "Segoe UI", sans-serif; }
-    .sheet-left { width: 230px; flex-shrink: 0; background: #0f1c17; padding: 1.1rem 0.9rem; display: flex; flex-direction: column; align-items: center; gap: 0.6rem; border-right: 1px solid rgba(201,169,110,0.18); }
+    /* ── Card shell ── */
+    .char-sheet { display: flex; width: min(960px, 100%); min-height: 520px; border: 1px solid rgba(201,169,110,0.35); overflow: hidden; font-family: -apple-system, "Segoe UI", sans-serif; }
+
+    /* ── LEFT: arcana grid + stars + name + era + stats ── */
+    .sheet-left { width: 240px; flex-shrink: 0; background: #0f1c17; padding: 1rem 0.9rem; display: flex; flex-direction: column; align-items: center; gap: 0.55rem; border-right: 1px solid rgba(201,169,110,0.18); }
     .sheet-arcana-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.4rem; width: 100%; }
-    .sheet-arcana-item { display: flex; flex-direction: column; align-items: center; gap: 0.18rem; padding: 0.35rem 0.2rem; border: 1px solid rgba(255,255,255,0.07); border-radius: 3px; opacity: 0.32; }
+    .sheet-arcana-item { display: flex; flex-direction: column; align-items: center; gap: 0.18rem; padding: 0.35rem 0.2rem; border: 1px solid rgba(255,255,255,0.07); border-radius: 3px; opacity: 0.22; }
     .sheet-arcana-item.active { opacity: 1; border-color: rgba(201,169,110,0.45); background: rgba(201,169,110,0.07); }
-    .sheet-arcana-emoji { width: 30px; height: 30px; object-fit: contain; display: block; image-rendering: auto; }
-    .sheet-arcana-label { font-size: 0.45rem; letter-spacing: 0.07em; color: rgba(232,224,208,0.45); text-transform: uppercase; }
-    .sheet-stars { color: #d4a847; font-size: 0.78rem; letter-spacing: 0.08em; }
-    .sheet-name { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 1.15rem; font-weight: 600; color: #d4a847; text-align: center; }
-    .sheet-era { font-size: 0.62rem; color: rgba(212,168,71,0.65); text-align: center; }
-    .sheet-stats { width: 100%; background: rgba(0,0,0,0.18); border: 1px solid rgba(201,169,110,0.12); padding: 0.45rem 0.6rem; }
-    .sheet-stats-total { font-size: 0.66rem; color: var(--gold); letter-spacing: 0.08em; margin-bottom: 0.35rem; }
-    .sheet-stat-row { display: flex; justify-content: space-between; padding: 0.14rem 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .sheet-arcana-emoji { width: 32px; height: 32px; object-fit: contain; display: block; }
+    .sheet-arcana-label { font-size: 0.42rem; letter-spacing: 0.07em; color: rgba(232,224,208,0.45); text-transform: uppercase; }
+    .sheet-stars { color: #d4a847; font-size: 0.82rem; letter-spacing: 0.05em; }
+    .sheet-name { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 1.2rem; font-weight: 600; color: #d4a847; text-align: center; line-height: 1.2; }
+    .sheet-era { font-size: 0.6rem; color: rgba(212,168,71,0.6); text-align: center; }
+    .sheet-stats { width: 100%; background: rgba(0,0,0,0.22); border: 1px solid rgba(201,169,110,0.12); padding: 0.5rem 0.65rem; }
+    .sheet-stats-total { font-size: 0.66rem; color: var(--gold); letter-spacing: 0.08em; margin-bottom: 0.3rem; }
+    .sheet-stat-row { display: flex; justify-content: space-between; padding: 0.16rem 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
     .sheet-stat-row:last-child { border-bottom: none; }
-    .sheet-stat-label { font-size: 0.65rem; font-weight: 700; color: #c9a96e; letter-spacing: 0.08em; }
-    .sheet-stat-val   { font-size: 0.65rem; color: #e0ddd0; }
+    .sheet-stat-label { font-size: 0.68rem; font-weight: 700; color: #c9a96e; letter-spacing: 0.08em; }
+    .sheet-stat-val { font-size: 0.68rem; color: #e0ddd0; }
     .editable-stat { cursor: text; border-bottom: 1px dashed rgba(201,169,110,0.15); transition: color 0.15s, border-color 0.15s; }
     .editable-stat:hover { color: var(--gold); border-color: rgba(201,169,110,0.4); }
-    .editable-stat input { width: 38px; background: transparent; border: none; border-bottom: 1px solid rgba(201,169,110,0.55); color: #e0ddd0; font-size: 0.65rem; text-align: right; outline: none; font-family: inherit; }
+    .editable-stat input { width: 38px; background: transparent; border: none; border-bottom: 1px solid rgba(201,169,110,0.55); color: #e0ddd0; font-size: 0.68rem; text-align: right; outline: none; font-family: inherit; }
 
+    /* ── CENTER: portrait ── */
     .sheet-center { flex: 1; background: #090910; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 1rem 0.75rem; border-right: 1px solid rgba(201,169,110,0.18); }
-    .sheet-portrait-area { flex: 1; width: 100%; display: flex; align-items: center; justify-content: center; border: 1px dashed rgba(201,169,110,0.18); background: rgba(255,255,255,0.015); color: rgba(201,169,110,0.22); font-size: 0.68rem; text-align: center; line-height: 1.7; min-height: 200px; overflow: hidden; }
+    .sheet-portrait-area { flex: 1; width: 100%; display: flex; align-items: center; justify-content: center; border: 1px dashed rgba(201,169,110,0.18); background: rgba(255,255,255,0.015); color: rgba(201,169,110,0.22); font-size: 0.68rem; text-align: center; line-height: 1.7; min-height: 280px; overflow: hidden; cursor: pointer; }
     .sheet-portrait-area img { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .sheet-center-deco { flex-shrink: 0; padding-top: 0.5rem; font-size: 1.3rem; color: rgba(201,169,110,0.16); line-height: 1; text-align: center; }
+    .sheet-center-deco { flex-shrink: 0; padding-top: 0.5rem; font-size: 1.1rem; color: rgba(201,169,110,0.18); line-height: 1; text-align: center; }
+    .portrait-upload-hint { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.4rem; padding: 0.5rem; width: 100%; height: 100%; }
+    .portrait-upload-hint input[type=file] { display: none; }
 
-    .sheet-right { width: 230px; flex-shrink: 0; background: #0c1118; display: flex; flex-direction: column; }
+    /* ── RIGHT: medium + portrait info ── */
+    .sheet-right { width: 240px; flex-shrink: 0; background: #0c1118; display: flex; flex-direction: column; }
     .sheet-right-top { flex: 1; padding: 0.9rem; border-bottom: 1px solid rgba(201,169,110,0.12); display: flex; flex-direction: column; gap: 0.5rem; }
-    .sheet-medium-header { display: flex; justify-content: space-between; }
-    .sheet-medium-label { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.12em; color: #e0ddd0; }
+    .sheet-medium-header { display: flex; justify-content: space-between; align-items: flex-start; }
+    .sheet-medium-label { font-size: 0.78rem; font-weight: 700; letter-spacing: 0.12em; color: #e0ddd0; }
     .sheet-medium-rank  { font-size: 0.58rem; color: rgba(201,169,110,0.42); }
-    .sheet-medium-type  { font-size: 0.68rem; color: #c9a96e; font-style: italic; }
-    .sheet-ability-box  { background: rgba(0,0,0,0.22); border: 1px solid rgba(201,169,110,0.1); padding: 0.5rem 0.6rem; flex: 1; font-size: 0.68rem; color: #b5b2a5; line-height: 1.6; min-height: 70px; }
-    .sheet-right-bottom { background: #d5d2c2; padding: 0.7rem 0.85rem; }
+    .sheet-medium-type  { font-size: 0.7rem; color: #c9a96e; font-style: italic; }
+    .sheet-ability-box  { background: rgba(0,0,0,0.22); border: 1px solid rgba(201,169,110,0.1); padding: 0.55rem 0.65rem; flex: 1; font-size: 0.7rem; color: #b5b2a5; line-height: 1.65; min-height: 80px; }
+    .sheet-right-bottom { background: #d5d2c2; padding: 0.75rem 0.9rem; }
     .sheet-portrait-title { font-size: 0.75rem; font-weight: 700; color: #1a1a1a; letter-spacing: 0.1em; margin-bottom: 0.45rem; text-align: center; }
-    .sheet-info-row { display: flex; justify-content: space-between; padding: 0.16rem 0; border-bottom: 1px solid rgba(0,0,0,0.07); font-size: 0.62rem; }
+    .sheet-info-row { display: flex; justify-content: space-between; padding: 0.17rem 0; border-bottom: 1px solid rgba(0,0,0,0.07); font-size: 0.63rem; }
     .sheet-info-row:last-child { border-bottom: none; }
     .sheet-info-label { color: #2a2a2a; font-weight: 600; }
     .sheet-info-val   { color: #383838; }
     .sheet-pos-badge  { background: #eae7d5; border: 1px solid #b8b096; padding: 0.08rem 0.4rem; border-radius: 2px; font-size: 0.58rem; color: #1a1a1a; }
-
-    .portrait-upload-hint { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.4rem; padding: 0.5rem; cursor: pointer; width: 100%; height: 100%; }
-    .portrait-upload-hint input[type=file] { display: none; }
 
     .card-actions { display: flex; gap: 0.75rem; margin-top: 1.5rem; flex-wrap: wrap; justify-content: center; }
     .card-btn { padding: 0.58rem 1.3rem; font-family: inherit; font-size: 0.8rem; letter-spacing: 0.08em; border-radius: 4px; cursor: pointer; transition: opacity 0.18s, transform 0.15s; }
@@ -754,47 +757,65 @@
 
   /* ══ CARD VIEW ══ */
   function showCard() {
+    try {
+      const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(state.answers))));
+      history.replaceState(null, "", "?data=" + encoded);
+    } catch(_) {}
     document.getElementById("wizard").classList.remove("active");
     document.getElementById("card-view").classList.add("active");
     document.getElementById("charCardContainer").innerHTML = buildCard(state.answers);
   }
 
   function buildCard(ans) {
-    const ALL_ARCANA = [{value:"BEAST"},{value:"PLANT"},{value:"STAR"},{value:"MINERAL"},{value:"SPIRIT"},{value:"INTELLECT"}];
-    const arcanaGrid = ALL_ARCANA.map(a => `<div class="sheet-arcana-item ${ans.arcana===a.value?'active':''}"><img class="sheet-arcana-emoji" src="${ARCANA_ASSETS[a.value]}" alt="${a.value}"><span class="sheet-arcana-label">${a.value}</span></div>`).join("");
-    const starCount = parseInt(ans.stars)||0;
-    const starsHtml = "★".repeat(starCount)+"☆".repeat(Math.max(0,7-starCount));
-    const statRows = ["COR","MNF","RFX","SCR","DEF"].map(s=>`<div class="sheet-stat-row"><span class="sheet-stat-label">${s}</span><span class="sheet-stat-val editable-stat" data-stat="${s}" title="คลิกเพื่อใส่ค่า">${escHtml(ans.stats?.[s]??"—")}</span></div>`).join("");
+    const starCount = parseInt(ans.stars) || 0;
+    const starsHtml = "★".repeat(starCount) + "☆".repeat(Math.max(0, 7 - starCount));
+    const statRows = ["COR","MNF","RFX","SCR","DEF"].map(s =>
+      `<div class="sheet-stat-row"><span class="sheet-stat-label">${s}</span><span class="sheet-stat-val editable-stat" data-stat="${s}" title="คลิกเพื่อใส่ค่า">${escHtml(ans.stats?.[s] ?? "—")}</span></div>`
+    ).join("");
     const portraitContent = state.portraitDataUrl
       ? `<img src="${state.portraitDataUrl}" alt="portrait">`
-      : `<label class="portrait-upload-hint" title="คลิกเพื่ออัปโหลดรูป"><input type="file" accept="image/*" onchange="handlePortraitUpload(event)"><span style="font-size:1.4rem;opacity:0.5">＋</span><span>คลิกเพื่อใส่รูปตัวละคร</span></label>`;
+      : `<label class="portrait-upload-hint" title="คลิกเพื่ออัปโหลดรูป"><input type="file" accept="image/*" onchange="handlePortraitUpload(event)"><span style="font-size:1.6rem;opacity:0.4">＋</span><span>คลิกเพื่อใส่รูปตัวละคร</span></label>`;
+    const ALL_ARCANA = ["BEAST","PLANT","STAR","MINERAL","SPIRIT","INTELLECT"];
+    const arcanaGrid = ALL_ARCANA.map(a =>
+      `<div class="sheet-arcana-item ${ans.arcana === a ? 'active' : ''}">
+        <img class="sheet-arcana-emoji" src="${ARCANA_ASSETS[a]}" alt="${a}">
+        <span class="sheet-arcana-label">${a}</span>
+      </div>`
+    ).join("");
+    const starRank = starCount <= 2 ? "△" : starCount <= 4 ? "△ △△" : "△ △△ △△△";
     return `
     <div class="char-sheet" id="charCard">
       <div class="sheet-left">
         <div class="sheet-arcana-grid">${arcanaGrid}</div>
         <div class="sheet-stars">${starsHtml}</div>
-        <div class="sheet-name">${escHtml(ans.name??"—")}</div>
-        <div class="sheet-era">Era · ${escHtml(ans.era??"0000")} ปีที่จากมา</div>
-        <div class="sheet-stats"><div class="sheet-stats-total">Total :</div>${statRows}</div>
+        <div class="sheet-name">${escHtml(ans.name ?? "—")}</div>
+        <div class="sheet-era">Era - ${escHtml(ans.era ?? "0000")}</div>
+        <div class="sheet-stats">
+          <div class="sheet-stats-total">Total :</div>
+          ${statRows}
+        </div>
       </div>
       <div class="sheet-center">
         <div class="sheet-portrait-area" id="portraitArea">${portraitContent}</div>
-        <div class="sheet-center-deco">✦ ✦ ✦</div>
+        <div class="sheet-center-deco">◆ ◆ ◆</div>
       </div>
       <div class="sheet-right">
         <div class="sheet-right-top">
-          <div class="sheet-medium-header"><span class="sheet-medium-label">Medium</span><span class="sheet-medium-rank">△ △△ △△△</span></div>
-          <div class="sheet-medium-type">${escHtml(ans.mediumType??"—")}</div>
-          <div class="sheet-ability-box">${escHtml(ans.ability??"—")}</div>
+          <div class="sheet-medium-header">
+            <span class="sheet-medium-label">Medium</span>
+            <span class="sheet-medium-rank">${starRank}</span>
+          </div>
+          <div class="sheet-medium-type">${escHtml(ans.mediumType ?? "—")}</div>
+          <div class="sheet-ability-box">${escHtml(ans.ability ?? "—")}</div>
         </div>
         <div class="sheet-right-bottom">
           <div class="sheet-portrait-title">Portrait</div>
-          <div class="sheet-info-row"><span class="sheet-info-label">Age</span><span class="sheet-info-val">${escHtml(ans.age??"—")}</span></div>
-          <div class="sheet-info-row"><span class="sheet-info-label">Gender</span><span class="sheet-info-val">${escHtml(ans.gender??"—")}</span></div>
-          <div class="sheet-info-row"><span class="sheet-info-label">Nationality</span><span class="sheet-info-val">${escHtml(ans.nationality??"—")}</span></div>
-          <div class="sheet-info-row"><span class="sheet-info-label">Height/Weight</span><span class="sheet-info-val">${escHtml(ans.heightweight??"—")}</span></div>
-          <div class="sheet-info-row"><span class="sheet-info-label">Race</span><span class="sheet-info-val">${escHtml(ans.race??"—")}</span></div>
-          <div class="sheet-info-row"><span class="sheet-info-label">Position</span><span class="sheet-pos-badge">${escHtml(ans.position??"—")}</span></div>
+          <div class="sheet-info-row"><span class="sheet-info-label">Age</span><span class="sheet-info-val">${escHtml(ans.age ?? "—")}</span></div>
+          <div class="sheet-info-row"><span class="sheet-info-label">Gender</span><span class="sheet-info-val">${escHtml(ans.gender ?? "—")}</span></div>
+          <div class="sheet-info-row"><span class="sheet-info-label">Nationality</span><span class="sheet-info-val">${escHtml(ans.nationality ?? "—")}</span></div>
+          <div class="sheet-info-row"><span class="sheet-info-label">Height/Weight</span><span class="sheet-info-val">${escHtml(ans.heightweight ?? "—")}</span></div>
+          <div class="sheet-info-row"><span class="sheet-info-label">Race</span><span class="sheet-info-val">${escHtml(ans.race ?? "—")}</span></div>
+          <div class="sheet-info-row"><span class="sheet-info-label">Position</span><span class="sheet-pos-badge">${escHtml(ans.position ?? "—")} ▾</span></div>
         </div>
       </div>
     </div>`;
@@ -852,7 +873,20 @@
 
   /* ══ START ══ */
   fetchBotAvatar();
-  renderStep();
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const raw = params.get("data");
+    if (raw) {
+      state.answers = JSON.parse(decodeURIComponent(escape(atob(raw))));
+      document.getElementById("wizard").classList.remove("active");
+      document.getElementById("card-view").classList.add("active");
+      document.getElementById("charCardContainer").innerHTML = buildCard(state.answers);
+    } else {
+      renderStep();
+    }
+  } catch(_) {
+    renderStep();
+  }
   </script>
 </body>
 </html>
