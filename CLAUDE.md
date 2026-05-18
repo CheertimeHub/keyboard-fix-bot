@@ -6,18 +6,22 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Discord bot แปลงข้อความที่พิมพ์ผิด keyboard layout (ไทย ↔ อังกฤษ Kedmanee) รองรับ 3 กรณี:
 1. พิมพ์ภาษาอังกฤษในขณะที่ keyboard ตั้งอยู่ที่ภาษาไทย (eng→thai)
-2. พิมพ์ภาษาไทยในขณะที่ keyboard ตั้งอยู่ที่ภาษาอังกฤษ (thai→eng)
+2. พิมพ์ภาษาไทยในขณะที่ keyboard ตั้งอยู่ที่ภาษาอังกฤษ (thai→eng) — fallback หลัง caps-fix ไม่ได้ผล
 3. พิมพ์ภาษาไทยตอน Caps Lock ติดอยู่ (caps-fix)
+
+มี TTS session-based ที่ใช้ Google Cloud Text-to-Speech (Chirp3-HD Sulafat) อ่านข้อความใน voice channel
 
 ## Running the Bot
 
 ```bash
 npm install
-cp .env.example .env   # ใส่ BOT_TOKEN ใน .env
+cp .env.example .env   # ใส่ BOT_TOKEN และ GOOGLE_CREDENTIALS_JSON ใน .env
 npm start
 ```
 
-ต้องใช้ Node.js 20.x ตาม `engines` ใน `package.json`
+เทสต์ในเครื่องโดยไม่ชนกับ Render: `$env:PORT=3001; npm start`
+
+Google credentials: วางไฟล์ `xevra-tts-functions-f5a8e0b7b1f1.json` ไว้ใน root — โค้ดอ่านจากไฟล์นี้ก่อน แล้วค่อย fallback ไป `GOOGLE_CREDENTIALS_JSON` env var
 
 ## Architecture
 
@@ -46,7 +50,7 @@ Web server รันคู่กันบน `process.env.PORT || 3000`
 
 **ฟังก์ชันหลัก:**
 - `isMostlyThai(text)`: ถ้า >50% ของ non-whitespace chars อยู่ใน U+0E00–U+0E7F → Thai
-- `detectAndConvert(text)`: entry point — ถ้า Thai → `fixCapsLock()`, ถ้า ASCII → นับ engToThai vs thaiToEng hits แล้วเลือก direction
+- `detectAndConvert(text)`: entry point — ถ้า Thai → ลอง `fixCapsLock()` ก่อน ถ้า none → fallback `thaiToEng`, ถ้า ASCII → นับ engToThai vs thaiToEng hits แล้วเลือก direction
 - `fixCapsLock(text)`: แก้ caps-lock token-by-token (split by spaces) — แปลงเฉพาะ token ที่มี caps chars เกิน 50%
 - `resolveByDict(text)`: ใช้ Thai dictionary (`thaiWords.json`) แก้ความคลุมเครือของ ็/้ และ ์/ื/ี หลัง caps-fix
 
@@ -108,11 +112,24 @@ Bot รองรับ commands ที่ใช้ @mention โดยตรง (
 - Font: `Cinzel` (serif headers), `Sarabun` (Thai body text)
 - Art deco corners, deco dividers ผ่าน `.corner`, `.deco-divider`, `.deco-diamond`
 
+### TTS: `services/tts.js`
+
+- เสียง default: `th-TH-Chirp3-HD-Sulafat` (ไทย) และ `en-US-Chirp3-HD-Sulafat` (อังกฤษ) แต่ตอนนี้ใช้เสียงไทยตลอด (`getVoiceConfig(guildId, "th")`) เพราะ user ต้องการให้อังกฤษออกเสียงสำเนียงไทย
+- audio encoding: `OGG_OPUS` + `StreamType.OggOpus` — ไม่ต้องการ FFmpeg
+- `preprocessText(text)`: ลบ URL, แปลง Discord custom emoji → ชื่อ, ลบ mention/spoiler/code block, แปลง `555`/`HAHAHA`/`lol` → `ฮ่าๆ`, ตัดที่ 200 chars, ถ้าขึ้นต้นด้วย `-` → return null
+
+**TTS Session (ใน `index.js`):**
+- `ttsSessions` Map: `guildId → { connection, player, textChannelId, voiceChannelId, queue, speaking }`
+- Commands: `@บอท join` (เข้า VC), `@บอท leave`/`หยุด` (ออก VC), `@บอท voice` (ดู/เปลี่ยนเสียง)
+- Auto-read: ทุก message ใน textChannel ที่ join ไว้จะถูกอ่านอัตโนมัติ (ยกเว้น mention บอท)
+- mention บอทตรวจก่อน auto-read เสมอ เพื่อให้ `leave` command ทำงานได้แม้อยู่ใน TTS channel
+
 ## Environment Variables
 
 | Variable | Description |
 |---|---|
 | `BOT_TOKEN` | Discord bot token |
+| `GOOGLE_CREDENTIALS_JSON` | Google Cloud service account JSON (stringified) |
 | `PORT` | HTTP server port (default: 3000) |
 
 ## Deployment
