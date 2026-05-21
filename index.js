@@ -113,6 +113,48 @@ client.on("messageCreate", async (msg) => {
 
   // ถ้าไม่ได้ reply → command
   if (!msg.reference) {
+    // 🎰 Advanced Slot Machine
+    if (/^slot(s|สล็อต)?$/i.test(body) || /^สล็อต$/.test(body)) {
+      const EMOJIS = ["🍒","🍋","⭐","🍇","🔔","💎","🍀","🎯"];
+      const randomEmoji = () => EMOJIS[Math.floor(Math.random() * EMOJIS.length)];
+      const render = (a, b, c) =>
+        `╔══ 🎰 SLOT 🎰 ══╗\n┃ ${a} │ ${b} │ ${c} ┃\n╚════════════╝`;
+      const chatter = [
+        "กำลังปั่นโชคชะตา...",
+        "ขอให้ไม่เกลือ...",
+        "ลุ้น...",
+        "เครื่องกำลังประมวลผล...",
+        "ใกล้หยุดแล้ว...",
+        "เครื่องเริ่มร้อนแล้ว...",
+      ];
+      let reels = [randomEmoji(), randomEmoji(), randomEmoji()];
+      const sent = await msg.reply(`${render(...reels)}\n\n${chatter[Math.floor(Math.random()*chatter.length)]}`);
+      const spins = [
+        3 + Math.floor(Math.random() * 2),
+        5 + Math.floor(Math.random() * 2),
+        7 + Math.floor(Math.random() * 2),
+      ];
+      const final = [randomEmoji(), randomEmoji(), randomEmoji()];
+      const maxSpin = Math.max(...spins);
+      for (let i = 0; i < maxSpin; i++) {
+        if (i < spins[0]) reels[0] = i === spins[0]-1 ? final[0] : randomEmoji();
+        if (i < spins[1]) reels[1] = i === spins[1]-1 ? final[1] : randomEmoji();
+        if (i < spins[2]) reels[2] = i === spins[2]-1 ? final[2] : randomEmoji();
+        await sent.edit(`${render(...reels)}\n\n${chatter[Math.floor(Math.random()*chatter.length)]}`);
+        await new Promise(r => setTimeout(r, 120 + (i * 40)));
+      }
+      const isJackpot = final.every(v => v === final[0]);
+      const counts = {};
+      final.forEach(v => counts[v] = (counts[v]||0)+1);
+      const isPair = Object.values(counts).includes(2);
+      const resultText = isJackpot ? "JACKPOT !!!\nเศรษฐีใหม่ถือกำเนิด 💰"
+        : isPair ? ["อีกนิดเดียวเอง~","โถ่ จะได้อยู่แล้วเชียว","เกือบๆๆๆๆ","แทบจะถึงแล้ว !"][Math.floor(Math.random()*4)]
+        : "**LOSE !**\n" + ["ลองใหม่นะ !","อีกครั้งมั้ยคะ ~","โถ่ สู้ๆน้า","เกลือจัด...","ตู้กินเรียบ","วันนี้ดวงไม่มา"][Math.floor(Math.random()*6)];
+      await new Promise(r => setTimeout(r, 800));
+      await sent.edit(`${render(...final)}\n\n${resultText}`);
+      return;
+    }
+
     // TTS join
     if (/^join$/i.test(body)) {
       const member = msg.guild?.members.cache.get(msg.author.id);
